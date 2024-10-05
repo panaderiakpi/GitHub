@@ -169,74 +169,65 @@ function obtener_access_token_dropbox($app_key, $app_secret, $refresh_token) {
 }
 
 // Función para subir un archivo a Dropbox y generar un enlace compartido
-function subir_a_dropbox_y_generar_enlace($archivo, $dropbox_token) {
-    // Subir el archivo a Dropbox en modo sobrescribir si existe
-    $url_upload = "https://content.dropboxapi.com/2/files/upload";
-    $path = '/' . basename($archivo);
+function subir_a_dropbox_y_generar_enlace($archivo_salida, $dropbox_token) {
+    try {
+        // Subir el archivo a Dropbox
+        $url_upload = "https://content.dropboxapi.com/2/files/upload";
+        $path = '/' . basename($archivo_salida);
 
-    $headers_upload = [
-        "Authorization: Bearer $dropbox_token",
-        "Content-Type: application/octet-stream",
-        "Dropbox-API-Arg: " . json_encode(["path" => $path, "mode" => "overwrite", "autorename" => false, "mute" => false, "strict_conflict" => false])
-    ];
+        $headers_upload = [
+            "Authorization: Bearer $dropbox_token",
+            "Content-Type: application/octet-stream",
+            "Dropbox-API-Arg: " . json_encode(["path" => $path, "mode" => "overwrite"])
+        ];
 
-    $archivo_contenido = file_get_contents($archivo);
-    $ch = curl_init($url_upload);
+        $archivo_contenido = file_get_contents($archivo_salida);
+        $ch_upload = curl_init($url_upload);
 
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $archivo_contenido);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers_upload);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch_upload, CURLOPT_POST, true);
+        curl_setopt($ch_upload, CURLOPT_POSTFIELDS, $archivo_contenido);
+        curl_setopt($ch_upload, CURLOPT_HTTPHEADER, $headers_upload);
+        curl_setopt($ch_upload, CURLOPT_RETURNTRANSFER, true);
 
-    $response = curl_exec($ch);
+        $response_upload = curl_exec($ch_upload);
+        curl_close($ch_upload);
 
-    if (curl_errno($ch)) {
-        echo "Error en la carga a Dropbox: " . curl_error($ch) . "\n";
+        if (!$response_upload) {
+            echo "Error al subir el archivo a Dropbox.\n";
+            return null;
+        }
+
+        // Crear el enlace compartido
+        $url_share = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings";
+        $headers_share = [
+            "Authorization: Bearer $dropbox_token",
+            "Content-Type: application/json"
+        ];
+        $data_share = ["path" => $path];
+
+        $ch_share = curl_init($url_share);
+        curl_setopt($ch_share, CURLOPT_POST, true);
+        curl_setopt($ch_share, CURLOPT_POSTFIELDS, json_encode($data_share));
+        curl_setopt($ch_share, CURLOPT_HTTPHEADER, $headers_share);
+        curl_setopt($ch_share, CURLOPT_RETURNTRANSFER, true);
+
+        $response_share = curl_exec($ch_share);
+        curl_close($ch_share);
+
+        $share_data = json_decode($response_share, true);
+        if (!isset($share_data['url'])) {
+            echo "Error al obtener el enlace compartido de Dropbox.\n";
+            return null;
+        }
+
+        // Modificar el enlace para descarga directa (cambiando dl=0 a dl=1)
+        $shared_link_url = str_replace('dl=0', 'dl=1', $share_data['url']);
+        return $shared_link_url;
+
+    } catch (Exception $e) {
+        echo "Error al subir el archivo a Dropbox: " . $e->getMessage() . "\n";
         return null;
     }
-
-    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    if ($http_status != 200) {
-        echo "Error en la carga a Dropbox. Código de estado HTTP: $http_status\n";
-        return null;
-    }
-
-    curl_close($ch);
-
-    // Crear el enlace compartido
-    $url_share = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings";
-    $headers_share = [
-        "Authorization: Bearer $dropbox_token",
-        "Content-Type: application/json"
-    ];
-    $data_share = [
-        "path" => $path,
-        "settings" => ["requested_visibility" => "public"]
-    ];
-
-    $ch_share = curl_init($url_share);
-    curl_setopt($ch_share, CURLOPT_POST, true);
-    curl_setopt($ch_share, CURLOPT_POSTFIELDS, json_encode($data_share));
-    curl_setopt($ch_share, CURLOPT_HTTPHEADER, $headers_share);
-    curl_setopt($ch_share, CURLOPT_RETURNTRANSFER, true);
-
-    $response_share = curl_exec($ch_share);
-    curl_close($ch_share);
-
-    if (!$response_share) {
-        echo "Error obteniendo el enlace de Dropbox.\n";
-        return null;
-    }
-
-    $share_data = json_decode($response_share, true);
-    if (!isset($share_data['url'])) {
-        echo "Error: No se pudo obtener el enlace compartido.\n";
-        return null;
-    }
-
-    // Modificar el enlace de Dropbox para que sea descargable
-    $dropbox_link = str_replace("dl=0", "dl=1", $share_data['url']);
-    return $dropbox_link;
 }
 
 // Generar el archivo de informe con la información solicitada
@@ -251,7 +242,7 @@ function generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_o
     $contenido .= "Token de 24 horas de M+: '$token_diario'\n";
     $contenido .= "Archivo de origen: '$archivo_origen'\n";
     $contenido .= "Archivo de destino: '$archivo_salida'\n";
-    $contenido .= "Enlace Dropbox: $dropbox_link\n";
+    $contenido .= "Enlace de descarga Dropbox: $dropbox_link\n";
     if ($token_actualizado) {
         $contenido .= "El token de 10 días fue actualizado.\n";
     } else {
