@@ -168,7 +168,7 @@ function obtener_access_token_dropbox($app_key, $app_secret, $refresh_token) {
     return $data['access_token'] ?? null;
 }
 
-// Función para subir un archivo a Dropbox
+// Función para subir un archivo a Dropbox y sobrescribir si existe
 function subir_a_dropbox($archivo, $dropbox_token) {
     $url = "https://content.dropboxapi.com/2/files/upload";
     $path = '/' . basename($archivo);
@@ -176,7 +176,7 @@ function subir_a_dropbox($archivo, $dropbox_token) {
     $headers = [
         "Authorization: Bearer $dropbox_token",
         "Content-Type: application/octet-stream",
-        "Dropbox-API-Arg: " . json_encode(["path" => $path, "mode" => "add", "autorename" => true, "mute" => false, "strict_conflict" => false])
+        "Dropbox-API-Arg: " . json_encode(["path" => $path, "mode" => "overwrite", "autorename" => false, "mute" => false, "strict_conflict" => false])
     ];
 
     $archivo_contenido = file_get_contents($archivo);
@@ -206,7 +206,7 @@ function subir_a_dropbox($archivo, $dropbox_token) {
 }
 
 // Generar el archivo de informe con la información solicitada
-function generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida) {
+function generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida, $dropbox_link, $token_actualizado) {
     $informe = "resultado.txt";
     $hora_actual = date('d/m/Y H:i:s');  // Obtener la hora actual en formato d/m/Y H:i:s
     
@@ -217,6 +217,12 @@ function generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_o
     $contenido .= "Token de 24 horas de M+: '$token_diario'\n";
     $contenido .= "Archivo de origen: '$archivo_origen'\n";
     $contenido .= "Archivo de destino: '$archivo_salida'\n";
+    $contenido .= "Enlace Dropbox: $dropbox_link\n";
+    if ($token_actualizado) {
+        $contenido .= "El token de 10 días fue actualizado.\n";
+    } else {
+        $contenido .= "No fue necesario actualizar el token.\n";
+    }
     $contenido .= "--- PROCEDIMIENTO FINALIZADO CON ÉXITO ---\n";
 
     // Sobrescribir el contenido en el archivo resultado.txt
@@ -233,9 +239,11 @@ $id_user = $jwt_data['accountNumber'] ?? 'Desconocido';
 $expiracion_bearer = date('d/m/Y H:i:s', $jwt_data['exp']);
 
 // Verificar si el token está cerca de caducar y refrescarlo si es necesario
+$token_actualizado = false;
 if (token_caducado_pronto($jwt_data)) {
     echo "El token está próximo a caducar, refrescando el token...\n";
     $AUTHORIZATION_BEARER = obtener_token_diario($AUTHORIZATION_BEARER);
+    $token_actualizado = true;
 }
 
 // Obtener el token diario
@@ -246,9 +254,6 @@ $archivo_origen = "Movistar_base.m3u";
 $archivo_salida = "Btf.m3u";
 procesar_m3u($archivo_origen, $archivo_salida, $token_diario);
 
-// Generar informe
-generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida);
-
 // Obtener un nuevo access token de Dropbox usando el refresh token
 $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";
 $APP_SECRET_DROPBOX = "629f1z2kzqmpqit";
@@ -256,11 +261,18 @@ $REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0
 
 $dropbox_access_token = obtener_access_token_dropbox($APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX);
 
-// Subir el archivo generado a Dropbox
+// Subir el archivo generado a Dropbox y generar el enlace
+$dropbox_link = "";
 if ($dropbox_access_token) {
-    subir_a_dropbox($archivo_salida, $dropbox_access_token);
+    if (subir_a_dropbox($archivo_salida, $dropbox_access_token)) {
+        // Enlace del archivo en Dropbox (URL directa)
+        $dropbox_link = "https://www.dropbox.com/home" . '/' . basename($archivo_salida);
+    }
 } else {
     echo "Error: No se pudo obtener el token de acceso para Dropbox.\n";
 }
+
+// Generar informe con el enlace y estado del token
+generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida, $dropbox_link, $token_actualizado);
 
 ?>
