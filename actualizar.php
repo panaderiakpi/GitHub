@@ -285,7 +285,7 @@ $token_diario = obtener_token_diario($AUTHORIZATION_BEARER);
 
 // Procesar el archivo M3U y asegurarse que se guarde en UTF-8
 $archivo_origen = "Movistar_base.m3u";
-$archivo_salida = "Btf.m3u";
+$archivo_salida = "gitBtf.m3u";
 procesar_m3u($archivo_origen, $archivo_salida, $token_diario);
 
 // Obtener un nuevo access token de Dropbox usando el refresh token
