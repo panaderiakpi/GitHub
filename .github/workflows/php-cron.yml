@@ -3,7 +3,7 @@ name: Ejecutar Script PHP Diario
 # Se ejecuta automáticamente todos los días a las 00:15 (hora de Europa/Madrid)
 on:
   schedule:
-    - cron: '54 22 * * *'  # Ejecutar diariamente a las 23:35 UTC (que son las 00:35 en Europa/Madrid)
+    - cron: '58 0 * * *'  # Ejecutar diariamente a las 23:35 UTC (que son las 00:35 en Europa/Madrid)
   workflow_dispatch:  # Permite ejecutar manualmente el workflow
 
 jobs:
