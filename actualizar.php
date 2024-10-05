@@ -168,7 +168,7 @@ function obtener_access_token_dropbox($app_key, $app_secret, $refresh_token) {
     return $data['access_token'] ?? null;
 }
 
-// Función para subir un archivo a Dropbox
+// Función para subir un archivo a Dropbox y sobrescribir si existe
 function subir_a_dropbox($archivo, $dropbox_token) {
     $url = "https://content.dropboxapi.com/2/files/upload";
     $path = '/' . basename($archivo);
@@ -176,7 +176,7 @@ function subir_a_dropbox($archivo, $dropbox_token) {
     $headers = [
         "Authorization: Bearer $dropbox_token",
         "Content-Type: application/octet-stream",
-        "Dropbox-API-Arg: " . json_encode(["path" => $path, "mode" => "add", "autorename" => true, "mute" => false, "strict_conflict" => false])
+        "Dropbox-API-Arg: " . json_encode(["path" => $path, "mode" => "overwrite", "autorename" => false, "mute" => false, "strict_conflict" => false])
     ];
 
     $archivo_contenido = file_get_contents($archivo);
@@ -196,71 +196,4 @@ function subir_a_dropbox($archivo, $dropbox_token) {
 
     $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     if ($http_status != 200) {
-        echo "Error en la carga a Dropbox. Código de estado HTTP: $http_status\n";
-        return false;
-    }
-
-    curl_close($ch);
-    echo "Archivo '$archivo' subido exitosamente a Dropbox.\n";
-    return true;
-}
-
-// Generar el archivo de informe con la información solicitada
-function generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida) {
-    $informe = "resultado.txt";
-    $hora_actual = date('d/m/Y H:i:s');  // Obtener la hora actual en formato d/m/Y H:i:s
-    
-    // Crear contenido del informe
-    $contenido = "Hora de la actualización: $hora_actual\n";
-    $contenido .= "Código de cliente: '$id_user'\n";
-    $contenido .= "Authorization bearer válido hasta: $expiracion_bearer\n";
-    $contenido .= "Token de 24 horas de M+: '$token_diario'\n";
-    $contenido .= "Archivo de origen: '$archivo_origen'\n";
-    $contenido .= "Archivo de destino: '$archivo_salida'\n";
-    $contenido .= "--- PROCEDIMIENTO FINALIZADO CON ÉXITO ---\n";
-
-    // Sobrescribir el contenido en el archivo resultado.txt
-    file_put_contents($informe, $contenido);
-    echo "Informe generado: $informe\n";
-}
-
-// Iniciar el proceso completo
-$AUTHORIZATION_BEARER = cargar_autorizacion('AUTHORIZATION_BEARER.ini'); // Leer el token desde el archivo .ini
-
-// Decodificar el token JWT para obtener información del cliente
-$jwt_data = decodificar_jwt($AUTHORIZATION_BEARER);
-$id_user = $jwt_data['accountNumber'] ?? 'Desconocido';
-$expiracion_bearer = date('d/m/Y H:i:s', $jwt_data['exp']);
-
-// Verificar si el token está cerca de caducar y refrescarlo si es necesario
-if (token_caducado_pronto($jwt_data)) {
-    echo "El token está próximo a caducar, refrescando el token...\n";
-    $AUTHORIZATION_BEARER = obtener_token_diario($AUTHORIZATION_BEARER);
-}
-
-// Obtener el token diario
-$token_diario = obtener_token_diario($AUTHORIZATION_BEARER);
-
-// Procesar el archivo M3U y asegurarse que se guarde en UTF-8
-$archivo_origen = "Movistar_base.m3u";
-$archivo_salida = "gitBtf.m3u";
-procesar_m3u($archivo_origen, $archivo_salida, $token_diario);
-
-// Generar informe
-generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida);
-
-// Obtener un nuevo access token de Dropbox usando el refresh token
-$APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";
-$APP_SECRET_DROPBOX = "629f1z2kzqmpqit";
-$REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";
-
-$dropbox_access_token = obtener_access_token_dropbox($APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX);
-
-// Subir el archivo generado a Dropbox
-if ($dropbox_access_token) {
-    subir_a_dropbox($archivo_salida, $dropbox_access_token);
-} else {
-    echo "Error: No se pudo obtener el token de acceso para Dropbox.\n";
-}
-
-?>
+        echo "Error en
