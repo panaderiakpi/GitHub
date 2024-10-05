@@ -168,7 +168,7 @@ function obtener_access_token_dropbox($app_key, $app_secret, $refresh_token) {
     return $data['access_token'] ?? null;
 }
 
-// Función para subir un archivo a Dropbox y generar un enlace compartido
+// Función para subir un archivo a Dropbox y generar un enlace compartido con "dl=1"
 function subir_a_dropbox_y_generar_enlace($archivo_salida, $dropbox_token) {
     try {
         // Subir el archivo a Dropbox
