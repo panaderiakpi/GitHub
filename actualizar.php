@@ -1,4 +1,7 @@
 <?php
+// Establecer la zona horaria a Europa/Madrid
+date_default_timezone_set('Europe/Madrid');
+
 // Función para cargar el token desde AUTHORIZATION_BEARER.ini
 function cargar_autorizacion($archivo_ini) {
     if (!file_exists($archivo_ini)) {
@@ -205,7 +208,7 @@ function subir_a_dropbox($archivo, $dropbox_token) {
 // Generar el archivo de informe con la información solicitada
 function generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida) {
     $informe = "resultado.txt";
-    $hora_actual = date('d/m/Y H:i:s');
+    $hora_actual = date('d/m/Y H:i:s');  // Obtener la hora actual en formato d/m/Y H:i:s
     
     // Crear contenido del informe
     $contenido = "Hora de la actualización: $hora_actual\n";
