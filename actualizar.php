@@ -35,6 +35,13 @@ function decodificar_jwt($jwt_token) {
     return $datos;
 }
 
+// Función para verificar si el token expira en 2 días o menos
+function token_caducado_pronto($jwt_data) {
+    $expiracion = $jwt_data['exp'];
+    $time_restante = $expiracion - time(); // Tiempo restante en segundos
+    return $time_restante < (2 * 24 * 60 * 60); // 2 días en segundos
+}
+
 // Realizar una petición POST utilizando cURL con los headers y datos proporcionados
 function hacer_peticion_post($url, $datos, $headers) {
     $curl = curl_init($url);
@@ -120,6 +127,81 @@ function procesar_m3u($archivo_origen, $archivo_salida, $token_diario) {
     echo "Archivo final '$archivo_salida' creado con éxito.\n";
 }
 
+// Función para obtener un nuevo token de acceso de Dropbox usando el refresh_token
+function obtener_access_token_dropbox($app_key, $app_secret, $refresh_token) {
+    $url = "https://api.dropbox.com/oauth2/token";
+
+    $headers = [
+        "Authorization: Basic " . base64_encode("$app_key:$app_secret"),
+        "Content-Type: application/x-www-form-urlencoded"
+    ];
+
+    $params = [
+        "grant_type" => "refresh_token",
+        "refresh_token" => $refresh_token
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($ch);
+
+    if (curl_errno($ch)) {
+        echo "Error obteniendo access token de Dropbox: " . curl_error($ch) . "\n";
+        return null;
+    }
+
+    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($http_status != 200) {
+        echo "Error en la solicitud de token de Dropbox. Código HTTP: $http_status\n";
+        return null;
+    }
+
+    curl_close($ch);
+    $data = json_decode($response, true);
+    return $data['access_token'] ?? null;
+}
+
+// Función para subir un archivo a Dropbox
+function subir_a_dropbox($archivo, $dropbox_token) {
+    $url = "https://content.dropboxapi.com/2/files/upload";
+    $path = '/' . basename($archivo);
+
+    $headers = [
+        "Authorization: Bearer $dropbox_token",
+        "Content-Type: application/octet-stream",
+        "Dropbox-API-Arg: " . json_encode(["path" => $path, "mode" => "add", "autorename" => true, "mute" => false, "strict_conflict" => false])
+    ];
+
+    $archivo_contenido = file_get_contents($archivo);
+    $ch = curl_init($url);
+
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $archivo_contenido);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($ch);
+
+    if (curl_errno($ch)) {
+        echo "Error en la carga a Dropbox: " . curl_error($ch) . "\n";
+        return false;
+    }
+
+    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($http_status != 200) {
+        echo "Error en la carga a Dropbox. Código de estado HTTP: $http_status\n";
+        return false;
+    }
+
+    curl_close($ch);
+    echo "Archivo '$archivo' subido exitosamente a Dropbox.\n";
+    return true;
+}
+
 // Generar el archivo de informe con la información solicitada
 function generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida) {
     $informe = "resultado.txt";
@@ -147,15 +229,35 @@ $jwt_data = decodificar_jwt($AUTHORIZATION_BEARER);
 $id_user = $jwt_data['accountNumber'] ?? 'Desconocido';
 $expiracion_bearer = date('d/m/Y H:i:s', $jwt_data['exp']);
 
+// Verificar si el token está cerca de caducar y refrescarlo si es necesario
+if (token_caducado_pronto($jwt_data)) {
+    echo "El token está próximo a caducar, refrescando el token...\n";
+    $AUTHORIZATION_BEARER = obtener_token_diario($AUTHORIZATION_BEARER);
+}
+
 // Obtener el token diario
 $token_diario = obtener_token_diario($AUTHORIZATION_BEARER);
 
 // Procesar el archivo M3U y asegurarse que se guarde en UTF-8
 $archivo_origen = "Movistar_base.m3u";
-$archivo_salida = "Btf.m3u";
+$archivo_salida = "gitBtf.m3u";
 procesar_m3u($archivo_origen, $archivo_salida, $token_diario);
 
 // Generar informe
 generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida);
+
+// Obtener un nuevo access token de Dropbox usando el refresh token
+$APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";
+$APP_SECRET_DROPBOX = "629f1z2kzqmpqit";
+$REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";
+
+$dropbox_access_token = obtener_access_token_dropbox($APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX);
+
+// Subir el archivo generado a Dropbox
+if ($dropbox_access_token) {
+    subir_a_dropbox($archivo_salida, $dropbox_access_token);
+} else {
+    echo "Error: No se pudo obtener el token de acceso para Dropbox.\n";
+}
 
 ?>
