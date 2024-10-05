@@ -11,12 +11,12 @@ jobs:
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@v3  # Actualizado a la versión más reciente que soporta Node 16+
+      uses: actions/checkout@v3  # Actualizado a la versión más reciente compatible con Node.js 16+
 
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '7.4'  # Puedes usar cualquier versión de PHP compatible con tu script
+        php-version: '7.4'  # Cambia esto a la versión de PHP que necesites
 
     - name: Run PHP script
       run: php actualizar.php
