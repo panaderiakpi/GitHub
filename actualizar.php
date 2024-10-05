@@ -168,41 +168,75 @@ function obtener_access_token_dropbox($app_key, $app_secret, $refresh_token) {
     return $data['access_token'] ?? null;
 }
 
-// Función para subir un archivo a Dropbox y sobrescribir si existe
-function subir_a_dropbox($archivo, $dropbox_token) {
-    $url = "https://content.dropboxapi.com/2/files/upload";
+// Función para subir un archivo a Dropbox y generar un enlace compartido
+function subir_a_dropbox_y_generar_enlace($archivo, $dropbox_token) {
+    // Subir el archivo a Dropbox en modo sobrescribir si existe
+    $url_upload = "https://content.dropboxapi.com/2/files/upload";
     $path = '/' . basename($archivo);
 
-    $headers = [
+    $headers_upload = [
         "Authorization: Bearer $dropbox_token",
         "Content-Type: application/octet-stream",
         "Dropbox-API-Arg: " . json_encode(["path" => $path, "mode" => "overwrite", "autorename" => false, "mute" => false, "strict_conflict" => false])
     ];
 
     $archivo_contenido = file_get_contents($archivo);
-    $ch = curl_init($url);
+    $ch = curl_init($url_upload);
 
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $archivo_contenido);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers_upload);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
     $response = curl_exec($ch);
 
     if (curl_errno($ch)) {
         echo "Error en la carga a Dropbox: " . curl_error($ch) . "\n";
-        return false;
+        return null;
     }
 
     $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     if ($http_status != 200) {
         echo "Error en la carga a Dropbox. Código de estado HTTP: $http_status\n";
-        return false;
+        return null;
     }
 
     curl_close($ch);
-    echo "Archivo '$archivo' subido exitosamente a Dropbox.\n";
-    return true;
+
+    // Crear el enlace compartido
+    $url_share = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings";
+    $headers_share = [
+        "Authorization: Bearer $dropbox_token",
+        "Content-Type: application/json"
+    ];
+    $data_share = [
+        "path" => $path,
+        "settings" => ["requested_visibility" => "public"]
+    ];
+
+    $ch_share = curl_init($url_share);
+    curl_setopt($ch_share, CURLOPT_POST, true);
+    curl_setopt($ch_share, CURLOPT_POSTFIELDS, json_encode($data_share));
+    curl_setopt($ch_share, CURLOPT_HTTPHEADER, $headers_share);
+    curl_setopt($ch_share, CURLOPT_RETURNTRANSFER, true);
+
+    $response_share = curl_exec($ch_share);
+    curl_close($ch_share);
+
+    if (!$response_share) {
+        echo "Error obteniendo el enlace de Dropbox.\n";
+        return null;
+    }
+
+    $share_data = json_decode($response_share, true);
+    if (!isset($share_data['url'])) {
+        echo "Error: No se pudo obtener el enlace compartido.\n";
+        return null;
+    }
+
+    // Modificar el enlace de Dropbox para que sea descargable
+    $dropbox_link = str_replace("dl=0", "dl=1", $share_data['url']);
+    return $dropbox_link;
 }
 
 // Generar el archivo de informe con la información solicitada
@@ -251,7 +285,7 @@ $token_diario = obtener_token_diario($AUTHORIZATION_BEARER);
 
 // Procesar el archivo M3U y asegurarse que se guarde en UTF-8
 $archivo_origen = "Movistar_base.m3u";
-$archivo_salida = "gitBtf.m3u";
+$archivo_salida = "Btf.m3u";
 procesar_m3u($archivo_origen, $archivo_salida, $token_diario);
 
 // Obtener un nuevo access token de Dropbox usando el refresh token
@@ -264,9 +298,9 @@ $dropbox_access_token = obtener_access_token_dropbox($APP_KEY_DROPBOX, $APP_SECR
 // Subir el archivo generado a Dropbox y generar el enlace
 $dropbox_link = "";
 if ($dropbox_access_token) {
-    if (subir_a_dropbox($archivo_salida, $dropbox_access_token)) {
-        // Enlace del archivo en Dropbox (URL directa)
-        $dropbox_link = "https://www.dropbox.com/home" . '/' . basename($archivo_salida);
+    $dropbox_link = subir_a_dropbox_y_generar_enlace($archivo_salida, $dropbox_access_token);
+    if (!$dropbox_link) {
+        echo "Error: No se pudo generar el enlace de Dropbox.\n";
     }
 } else {
     echo "Error: No se pudo obtener el token de acceso para Dropbox.\n";
