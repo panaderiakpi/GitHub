@@ -45,130 +45,6 @@ function token_caducado_pronto($jwt_data) {
     return $time_restante < (2 * 24 * 60 * 60); // 2 días en segundos
 }
 
-// Realizar una petición POST utilizando cURL con los headers y datos proporcionados
-function hacer_peticion_post($url, $datos, $headers) {
-    $curl = curl_init($url);
-
-    curl_setopt($curl, CURLOPT_POST, true);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($datos)); // Enviar los datos como JSON
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); // Forzar HTTP/1.1
-    curl_setopt($curl, CURLOPT_ENCODING, '');  // Desactivar chunked encoding
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); // Ignorar la verificación SSL si causa problemas
-
-    $respuesta = curl_exec($curl);
-
-    if (curl_errno($curl)) {
-        echo "Error en la solicitud POST: " . curl_error($curl) . "\n";
-        curl_close($curl);
-        return null;
-    }
-
-    $http_status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    if ($http_status != 200) {
-        echo "Error en la solicitud POST. Código de estado HTTP: $http_status\n";
-        echo "Respuesta del servidor: " . $respuesta . "\n";  // Imprimir respuesta completa para más detalles
-        curl_close($curl);
-        return null;
-    }
-
-    curl_close($curl);
-    return json_decode($respuesta, true);
-}
-
-// Obtener el token diario desde la API
-function obtener_token_diario($authorization_bearer) {
-    $url_token = "https://idserver.dof6.com/00QSp000006KYmsMAG-L/devices/webplayer/cdn/token/refresh";
-
-    $headers = [
-        'Authorization: Bearer ' . $authorization_bearer,
-        'Accept: */*',
-        'Accept-Encoding: gzip, deflate, br',
-        'Accept-Language: es-ES,es;q=0.9',
-        'Origin: https://ver.movistarplus.es',
-        'Referer: https://ver.movistarplus.es/canales?id_perfil=SUSCRI2&suscripcion=UT-DO0003,UT-MPARFU&ui=MPLUS&demarcation=0',
-        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 OPR/113.0.0.0',
-        'Content-Type: application/json'
-    ];
-
-    $datos_a_enviar = (object)[]; // Cuerpo vacío en formato JSON
-
-    $respuesta_token = hacer_peticion_post($url_token, $datos_a_enviar, $headers);
-
-    if ($respuesta_token && isset($respuesta_token['access_token'])) {
-        return $respuesta_token['access_token'];
-    } else {
-        die("Error: No se pudo obtener el token diario.");
-    }
-}
-
-// Procesar el archivo M3U añadiendo el token diario y forzando la codificación UTF-8
-function procesar_m3u($archivo_origen, $archivo_salida, $token_diario) {
-    if (!file_exists($archivo_origen)) {
-        die("Error: El archivo M3U de origen no existe.");
-    }
-
-    $lines = file($archivo_origen, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $archivo = fopen($archivo_salida, 'w');
-
-    if ($archivo === false) {
-        die("Error: No se pudo abrir el archivo de salida.");
-    }
-
-    // Escribir el BOM de UTF-8 para asegurar que el archivo esté codificado en UTF-8
-    fwrite($archivo, "\xEF\xBB\xBF");
-
-    foreach ($lines as $line) {
-        if (strpos($line, "http") === 0) {
-            fwrite($archivo, "#KODIPROP:inputstream.adaptive.stream_headers=X-TCDN-token=$token_diario\n");
-        }
-        fwrite($archivo, $line . "\n");
-    }
-
-    fclose($archivo);
-    echo "Archivo final '$archivo_salida' creado con éxito.\n";
-}
-
-// Función para obtener un nuevo token de acceso de Dropbox usando el refresh_token
-function obtener_access_token_dropbox($app_key, $app_secret, $refresh_token) {
-    $url = "https://api.dropbox.com/oauth2/token";
-
-    $headers = [
-        "Authorization: Basic " . base64_encode("$app_key:$app_secret"),
-        "Content-Type: application/x-www-form-urlencoded"
-    ];
-
-    $params = [
-        "grant_type" => "refresh_token",
-        "refresh_token" => $refresh_token
-    ];
-
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-    $response = curl_exec($ch);
-
-    if (curl_errno($ch)) {
-        echo "Error obteniendo access token de Dropbox: " . curl_error($ch) . "\n";
-        return null;
-    }
-
-    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    if ($http_status != 200) {
-        echo "Error en la solicitud de token de Dropbox. Código HTTP: $http_status\n";
-        return null;
-    }
-
-    curl_close($ch);
-    $data = json_decode($response, true);
-    return $data['access_token'] ?? null;
-}
-
-// Función para subir un archivo a Dropbox y generar un enlace compartido
 // Función para subir un archivo a Dropbox y generar un enlace compartido con "dl=1"
 function subir_a_dropbox_y_generar_enlace($archivo_salida, $dropbox_token) {
     try {
@@ -221,8 +97,10 @@ function subir_a_dropbox_y_generar_enlace($archivo_salida, $dropbox_token) {
             return null;
         }
 
-        // Modificar el enlace para descarga directa (cambiando dl=0 a dl=1)
-        $shared_link_url = str_replace('dl=0', 'dl=1', $share_data['url']);
+        // Forzar el enlace a descarga directa con el formato específico
+        $shared_link_url = $share_data['url'];
+        $shared_link_url = str_replace('dl=0', 'dl=1', $shared_link_url);
+        $shared_link_url = str_replace('?dl=1', '', $shared_link_url) . "?rlkey=n3kzof4a8exgoilhuq2i4gtgh&st=mhdbl9q3&dl=1";
         return $shared_link_url;
 
     } catch (Exception $e) {
@@ -231,7 +109,7 @@ function subir_a_dropbox_y_generar_enlace($archivo_salida, $dropbox_token) {
     }
 }
 
-// Generar el archivo de informe con la información solicitada
+// Función para generar el informe
 function generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida, $dropbox_link, $token_actualizado) {
     $informe = "resultado.txt";
     $hora_actual = date('d/m/Y H:i:s');  // Obtener la hora actual en formato d/m/Y H:i:s
@@ -278,7 +156,6 @@ $token_diario = obtener_token_diario($AUTHORIZATION_BEARER);
 // Procesar el archivo M3U y asegurarse que se guarde en UTF-8
 $archivo_origen = "Movistar_base.m3u";
 $archivo_salida = "gitBtf.m3u";
-procesar_m3u($archivo_origen, $archivo_salida, $token_diario);
 
 // Obtener un nuevo access token de Dropbox usando el refresh token
 $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";
