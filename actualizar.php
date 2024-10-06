@@ -17,13 +17,18 @@ function cargar_autorizacion($archivo_ini) {
 }
 
 // Función para realizar una solicitud POST cURL
-function hacer_peticion_post($url, $headers, $data) {
+function hacer_peticion_post($url, $headers, $data, $isFile = false) {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    
+
+    if ($isFile) {
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+    } else {
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+    }
+
     $response = curl_exec($ch);
     
     if (curl_errno($ch)) {
@@ -60,13 +65,13 @@ function subir_a_dropbox($archivo_salida, $dropbox_token) {
         ])
     ];
 
-    // Subir archivo a Dropbox
+    // Leer el contenido del archivo
     $file_content = file_get_contents($archivo_salida);
-    if (!$file_content) {
+    if ($file_content === false) {
         die("Error: No se pudo leer el archivo para subirlo.");
     }
     
-    $response = hacer_peticion_post($url_upload, $headers, $file_content);
+    $response = hacer_peticion_post($url_upload, $headers, $file_content, true);
     
     if ($response && isset($response['path_lower'])) {
         return $response['path_lower'];
@@ -125,12 +130,7 @@ function procesar_archivo_y_generar_enlace($archivo_salida, $dropbox_token) {
     return null;
 }
 
-// Ejecutar el proceso
-$APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";  // Tu App Key de Dropbox
-$APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // Tu App Secret de Dropbox
-$REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // Tu Refresh Token de Dropbox
-
-// Función para obtener access token
+// Función para obtener access token de Dropbox
 function obtener_access_token_dropbox($app_key, $app_secret, $refresh_token) {
     $url = "https://api.dropboxapi.com/oauth2/token";
     
@@ -153,6 +153,11 @@ function obtener_access_token_dropbox($app_key, $app_secret, $refresh_token) {
         return null;
     }
 }
+
+// Datos de autenticación de Dropbox
+$APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";  // Tu App Key de Dropbox
+$APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // Tu App Secret de Dropbox
+$REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // Tu Refresh Token de Dropbox
 
 // Obtener un nuevo access token de Dropbox
 $dropbox_access_token = obtener_access_token_dropbox($APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX);
