@@ -1,34 +1,28 @@
-name: Ejecutar Script PHP Diario
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v2
 
-# Se ejecuta a las 08:40 (hora de Europa/Madrid)
-on:
-  schedule:
-    - cron: '30 9 * * *'  # 09:30 UTC es 11:30 en Europa/Madrid
-  workflow_dispatch:  # Permite ejecutar manualmente el workflow
+  # Ejecutar tu script PHP
+  - name: Run your PHP script
+    run: php actualizar.php
 
-jobs:
-  run-php-script:
-    runs-on: ubuntu-latest
+  # Configurar Git
+  - name: Set GitHub Actions user name and email
+    run: |
+      git config --global user.name "GitHub Actions"
+      git config --global user.email "actions@github.com"
 
-    steps:
-    - name: Check out repository
-      uses: actions/checkout@v3  # Descargar el código del repositorio
+  # Agregar todos los archivos modificados y no rastreados
+  - name: Add modified and untracked files to Git
+    run: |
+      git add Movistar_base.m3u gitbtf.m3u
 
-    - name: Set up PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '7.4'  # Ajustar la versión de PHP según lo necesites
-        tools: composer
+  # Hacer commit de los cambios
+  - name: Commit changes
+    run: |
+      git commit -m "Actualización de archivos .m3u desde el script PHP"
 
-    - name: Run PHP script
-      run: php actualizar.php  # Asegúrate de que el script PHP esté en la ruta correcta
-
-    - name: Commit and push results
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git add resultado.txt  # Asegúrate de que estos archivos existan
-        git commit -m "Actualizar resultado"
-        git push
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Usar el token de GitHub para hacer el push
+  # Hacer push de los cambios
+  - name: Push changes to repository
+    run: |
+      git push
