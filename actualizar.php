@@ -1,7 +1,6 @@
 <?php
-use Dropbox\Client;
-use Dropbox\WriteMode;
-use Dropbox\Exception as DropboxException;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 // Datos necesarios
 $AUTHORIZATION_BEARER = trim(file_get_contents('AUTHORIZATION_BEARER.ini')); // Authorization bearer leído de archivo
@@ -11,8 +10,10 @@ $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw"; // API App key Dropbox
 $APP_SECRET_DROPBOX = "629f1z2kzqmpqit"; // API App secret Dropbox
 $REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9"; // API refresh token Dropbox
 $ARCHIVO_PROCESO_FINALIZADO = "resultado.txt"; // Archivo de informe
+$DROPBOX_API_URL = "https://content.dropboxapi.com/2/files/upload";
+$DROPBOX_AUTH_URL = "https://api.dropboxapi.com/oauth2/token";
 
-// Generar informe base
+// Crear el informe base
 file_put_contents($ARCHIVO_PROCESO_FINALIZADO, "Proceso en ejecución...\n");
 
 $config = parse_ini_file('Cas_Id_claves.ini', true);
@@ -100,26 +101,78 @@ function procesar_m3u($archivo_origen, $archivo_salida, $token_diario) {
 $token_diario = 'SIMULATED_24H_TOKEN'; // Simulación del token de 24 horas
 procesar_m3u($ARCHIVO_ORIGEN_O_URL, $ARCHIVO_SALIDA, $token_diario);
 
-// Subir a Dropbox
-function subir_a_dropbox($archivo_salida, $APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX) {
-    try {
-        $dbx = new Dropbox\Client($REFRESH_TOKEN_DROPBOX, $APP_KEY_DROPBOX);
-        $file = fopen($archivo_salida, 'rb');
-        $size = filesize($archivo_salida);
-        $dbx->filesUpload(fread($file, $size), "/$archivo_salida", ['mode' => 'overwrite']);
-        fclose($file);
+// Obtener token de acceso de Dropbox utilizando el refresh token
+function obtener_token_dropbox($app_key, $app_secret, $refresh_token) {
+    global $DROPBOX_AUTH_URL;
 
-        $shared_link = $dbx->createSharedLinkWithSettings("/$archivo_salida");
-        return str_replace("?dl=0", "?dl=1", $shared_link['url']);
-    } catch (DropboxException $e) {
-        echo "Error al subir el archivo a Dropbox: " . $e->getMessage();
+    $client = new Client();
+    try {
+        $response = $client->post($DROPBOX_AUTH_URL, [
+            'form_params' => [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refresh_token,
+                'client_id' => $app_key,
+                'client_secret' => $app_secret,
+            ]
+        ]);
+        $body = json_decode($response->getBody(), true);
+        return $body['access_token'] ?? null;
+    } catch (RequestException $e) {
+        echo "Error al obtener el token de Dropbox: " . $e->getMessage();
         return null;
     }
 }
 
-$dropbox_link = subir_a_dropbox($ARCHIVO_SALIDA, $APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX);
-if ($dropbox_link) {
-    echo "Archivo subido a Dropbox exitosamente. Enlace: $dropbox_link\n";
+// Subir archivo a Dropbox
+function subir_a_dropbox($archivo_salida, $dropbox_token) {
+    global $DROPBOX_API_URL;
+
+    if (!$dropbox_token) {
+        echo "Error: No se pudo obtener el token de Dropbox.\n";
+        return false;
+    }
+
+    $client = new Client();
+    try {
+        $response = $client->post($DROPBOX_API_URL, [
+            'headers' => [
+                'Authorization' => "Bearer $dropbox_token",
+                'Dropbox-API-Arg' => json_encode([
+                    "path" => "/$archivo_salida",
+                    "mode" => "overwrite",
+                    "autorename" => true
+                ]),
+                'Content-Type' => 'application/octet-stream',
+            ],
+            'body' => fopen($archivo_salida, 'rb')
+        ]);
+        echo "Archivo subido a Dropbox correctamente.\n";
+        return true;
+    } catch (RequestException $e) {
+        echo "Error al subir el archivo a Dropbox: " . $e->getMessage() . "\n";
+        return false;
+    }
 }
+
+// Obtener el token de acceso de Dropbox usando el refresh token
+$dropbox_token = obtener_token_dropbox($APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX);
+
+// Subir archivo a Dropbox
+if (subir_a_dropbox($ARCHIVO_SALIDA, $dropbox_token)) {
+    echo "Subida a Dropbox realizada con éxito.\n";
+}
+
+// Crear el informe final
+$hora_actual = date('d/m/Y H:i:s');
+$contenido = "Hora de la actualización: $hora_actual\n";
+$contenido .= "Código de cliente: '$id_user'\n";
+$contenido .= "Authorization bearer válido hasta: " . $validez_token->format('d/m/Y H:i:s') . "\n";
+$contenido .= "Token de 24 horas de M+: '$token_diario'\n";
+$contenido .= "Archivo de origen: '$ARCHIVO_ORIGEN_O_URL'\n";
+$contenido .= "Archivo de destino: '$ARCHIVO_SALIDA'\n";
+$contenido .= "Subida a Dropbox: " . ($dropbox_token ? "Sí" : "No") . "\n";
+
+file_put_contents($ARCHIVO_PROCESO_FINALIZADO, $contenido);
+echo "Informe generado correctamente en '$ARCHIVO_PROCESO_FINALIZADO'.\n";
 
 ?>
