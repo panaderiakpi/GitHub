@@ -122,17 +122,4 @@ if ($dropbox_link) {
     echo "Archivo subido a Dropbox exitosamente. Enlace: $dropbox_link\n";
 }
 
-// Crear el informe final
-$hora_actual = date('d/m/Y H:i:s');
-$contenido = "Hora de la actualización: $hora_actual\n";
-$contenido .= "Código de cliente: '$id_user'\n";
-$contenido .= "Authorization bearer válido hasta: " . $validez_token->format('d/m/Y H:i:s') . "\n";
-$contenido .= "Token de 24 horas de M+: '$token_diario'\n";
-$contenido .= "Archivo de origen: '$ARCHIVO_ORIGEN_O_URL'\n";
-$contenido .= "Archivo de destino: '$ARCHIVO_SALIDA'\n";
-$contenido .= "Enlace de descarga Dropbox: $dropbox_link\n";
-
-file_put_contents($ARCHIVO_PROCESO_FINALIZADO, $contenido);
-echo "Informe generado correctamente en '$ARCHIVO_PROCESO_FINALIZADO'.\n";
-
 ?>
