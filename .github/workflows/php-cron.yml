@@ -1,55 +1,34 @@
-name: Actualizar M3U y Subir a Dropbox
+name: Ejecutar Script PHP Diario
 
+# Se ejecuta automáticamente todos los días a las 00:15 (hora de Europa/Madrid)
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  schedule:
+    - cron: '39 22 * * *'  # Ejecutar diariamente a las 23:35 UTC (que son las 00:35 en Europa/Madrid)
+      workflow_dispatch:  # Permite ejecutar manualmente el workflow
 
 jobs:
-  actualizar_m3u:
+  run-php-script:
     runs-on: ubuntu-latest
 
     steps:
-      # Paso 1: Checkout del repositorio
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - name: Check out repository
+      uses: actions/checkout@v3  # Descargar el código del repositorio
 
-      # Paso 2: Configurar PHP (si necesitas PHP 8, puedes cambiar la versión aquí)
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '7.4'  # Cambia la versión de PHP según tus necesidades
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'  # Ajustar la versión de PHP según lo necesites
+        tools: composer
 
-      # Paso 3: Ejecutar el script PHP para generar los archivos .m3u
-      - name: Ejecutar script PHP
-        run: php actualizar.php
+    - name: Run PHP script
+      run: php actualizar.php  # Asegúrate de que el script PHP esté en la ruta Btf/
 
-      # Paso 4: Configurar el usuario y correo de Git para los commits
-      - name: Configurar Git
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-
-      # Paso 5: Añadir los archivos modificados (Movistar_base.m3u) y no rastreados (gitbtf.m3u) al área de staging
-      - name: Añadir archivos modificados y nuevos
-        run: |
-          git add Movistar_base.m3u gitbtf.m3u
-
-      # Paso 6: Comprobar si hay cambios para commit
-      - name: Verificar si hay cambios
-        run: |
-          if git diff --cached --quiet; then
-            echo "No hay cambios para hacer commit."
-            exit 0
-          fi
-
-      # Paso 7: Hacer commit de los cambios si hay modificaciones
-      - name: Commit de los cambios
-        run: |
-          git commit -m "Actualización de archivos .m3u desde el script PHP"
-
-      # Paso 8: Hacer push de los cambios al repositorio
-      - name: Push cambios al repositorio
-        run: git push
-
+    - name: Commit and push results
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add resultado.txt  # Asegúrate de que estos archivos existan
+        git commit -m "Actualizar resultado"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Usar el token de GitHub para hacer el push
