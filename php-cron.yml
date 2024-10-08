@@ -1,0 +1,22 @@
+name: Ejecutar Script PHP Diario
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Esto ejecuta el script cada día a la medianoche (UTC)
+  workflow_dispatch: # Permite ejecutar el workflow manualmente desde la interfaz de GitHub
+
+jobs:
+  run-php-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'  # Puedes usar cualquier versión de PHP compatible con tu script
+
+    - name: Run PHP script
+      run: php actualizar.php
