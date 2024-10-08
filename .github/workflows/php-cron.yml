@@ -1,34 +1,49 @@
 name: Ejecutar Script PHP Diario
 
-# Se ejecuta automáticamente todos los días a las 00:15 (hora de Europa/Madrid)
+# Programar la ejecución diaria
 on:
   schedule:
-    - cron: '39 22 * * *'  # Ejecutar diariamente a las 23:35 UTC (que son las 00:35 en Europa/Madrid)
-      workflow_dispatch:  # Permite ejecutar manualmente el workflow
+    - cron: '15 22 * * *'  # Ejecutar diariamente a las 22:15 UTC (ajusta la hora según tu zona horaria)
+  workflow_dispatch:  # Permitir la ejecución manual
 
 jobs:
-  run-php-script:
+  ejecutar-php-script:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out repository
-      uses: actions/checkout@v3  # Descargar el código del repositorio
+      # Paso 1: Descargar el código del repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '7.4'  # Ajustar la versión de PHP según lo necesites
-        tools: composer
+      # Paso 2: Configurar PHP
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'  # Cambiar la versión si es necesario
+          tools: composer
 
-    - name: Run PHP script
-      run: php actualizar.php  # Asegúrate de que el script PHP esté en la ruta Btf/
+      # Paso 3: Ejecutar el script PHP "ejecutar.php"
+      - name: Ejecutar el script PHP
+        run: php ejecutar.php  # Asegúrate de que el script esté en la ruta adecuada
 
-    - name: Commit and push results
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git add resultado.txt  # Asegúrate de que estos archivos existan
-        git commit -m "Actualizar resultado"
-        git push
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Usar el token de GitHub para hacer el push
+      # Paso 4: Verificar si el archivo de informe existe y procesar el resultado
+      - name: Generar informe
+        run: |
+          if [ -f resultado.txt ]; then
+            echo "El proceso se ejecutó correctamente, se generó el archivo de informe."
+          else
+            echo "Algo fue mal en el proceso, no se generó el archivo de informe."
+            exit 1
+          fi
+
+      # Paso 5: Commit y push del informe a GitHub (si se generó correctamente)
+      - name: Commit y push de los resultados
+        if: success()
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add resultado.txt  # Asegúrate de que el archivo resultado.txt exista
+          git commit -m "Informe generado automáticamente"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token para hacer el push
