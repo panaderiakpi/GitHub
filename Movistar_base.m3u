@@ -84,7 +84,7 @@ http://m1series-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstream.adaptive.license_key=13075cef94e24ca29b4ef5614a1a1192:93488c3497a7c68486187db56efaba49
 http://moriginales-dash-movistarplus.emisiondof6.com/manifest.mpd
 
-#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MSANSE" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ San Sebastián
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/TERROR" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ Terror
 #KODIPROP:inputstreamaddon=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
@@ -98,7 +98,7 @@ http://1popup-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstream.adaptive.license_key=a0e8ad05747040ca9887479536898d0a:f0bce7c3a14428b9e2364612e3822a6e
 http://mdocumentales-dash-movistarplus.emisiondof6.com/manifest.mpd
 
-#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBRAD" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ Brad Pitt
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MHITCH" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ Hitchcock 
 #KODIPROP:inputstreamaddon=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
@@ -158,7 +158,7 @@ http://espanol-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstreamaddon=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=
+#KODIPROP:inputstream.adaptive.license_key=c0dfce520b00420e9eee737b8f9d7d56:edcb83e6c83585c11d615eb6853c6e97
 http://01max-dash-movistarplus.emisiondof6.com/manifest.mpd
 
 #EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/SKYSHO" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",SkyShowtime 1
@@ -1126,6 +1126,13 @@ http://test21-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
 #KODIPROP:inputstream.adaptive.license_key=
 https://test22-dash-movistarplus.emisiondof6.com/manifest.mpd
+
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/PRUE8" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",Pruebas 8
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=
+http://01pruebasim-dash-movistarplus.emisiondof6.com/manifest.mpd
 
 #EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/TV3CAT" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",TV3
 #KODIPROP:inputstreamaddon=inputstream.adaptive
