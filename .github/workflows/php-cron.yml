@@ -1,41 +1,30 @@
 name: Ejecutar Script PHP Diario
 
-# Se ejecuta a las 08:40 (hora de Europa/Madrid)
+# Se ejecuta automáticamente todos los días a las 00:15 (hora de Europa/Madrid)
 on:
   schedule:
-    - cron: '40 6 * * *'  # 06:40 UTC es 08:40 en Europa/Madrid
-    - cron: '30 9 * * *'  # 09:30 UTC es 11:30 en Europa/Madrid
-  workflow_dispatch:  # Permite ejecutar manualmente el workflow
+    - cron: '20 21 * * *'  # Ejecutar diariamente a las 23:35 UTC (que son las 00:35 en Europa/Madrid)
+      workflow_dispatch:  # Permite ejecutar manualmente el workflow
 
 jobs:
   run-php-script:
     runs-on: ubuntu-latest
-    
-steps:
-  - name: Checkout repository
-    uses: actions/checkout@v2
 
-  # Ejecutar tu script PHP
-  - name: Run your PHP script
-    run: php actualizar.php
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v3  # Descargar el código del repositorio
 
-  # Configurar Git
-  - name: Set GitHub Actions user name and email
-    run: |
-      git config --global user.name "GitHub Actions"
-      git config --global user.email "actions@github.com"
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'  # Ajustar la versión de PHP según lo necesites
+        tools: composer
 
-  # Agregar todos los archivos modificados y no rastreados
-  - name: Add modified and untracked files to Git
-    run: |
-      git add Movistar_base.m3u gitbtf.m3u
+    - name: Run PHP script
+      run: php actualizar.php  # Asegúrate de que el script PHP esté en la ruta Btf/
 
-  # Hacer commit de los cambios
-  - name: Commit changes
-    run: |
-      git commit -m "Actualización de archivos .m3u desde el script PHP"
-
-  # Hacer push de los cambios
-  - name: Push changes to repository
-    run: |
-      git push
+    - name: Commit and push results
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add resultado.txt  # Asegúrate de que estos archivos existan
