@@ -6,7 +6,7 @@ use \DateInterval;
 // Leer datos desde los archivos
 $AUTHORIZATION_BEARER = trim(file_get_contents('AUTHORIZATION_BEARER.ini'));
 $ARCHIVO_ORIGEN_O_URL = "Movistar_base.m3u";
-$ARCHIVO_SALIDA = "btf.m3u";
+$ARCHIVO_SALIDA = "gitbtf.m3u";
 $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";
 $APP_SECRET_DROPBOX = "629f1z2kzqmpqit";
 $REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";
