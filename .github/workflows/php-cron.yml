@@ -1,9 +1,9 @@
 name: Ejecutar Script PHP Diario
 
-# Programar la ejecución diaria
+# Programar la ejecución diaria a las 22:00 UTC
 on:
   schedule:
-    - cron: '15 22 * * *'  # Ejecutar diariamente a las 22:15 UTC (ajusta la hora según tu zona horaria)
+    - cron: '0 22 * * *'  # Ejecutar diariamente a las 22:00 UTC
   workflow_dispatch:  # Permitir la ejecución manual
 
 jobs:
@@ -22,28 +22,6 @@ jobs:
           php-version: '7.4'  # Cambiar la versión si es necesario
           tools: composer
 
-      # Paso 3: Ejecutar el script PHP "ejecutar.php"
+      # Paso 3: Ejecutar el script PHP "actualizar.php"
       - name: Ejecutar el script PHP
-        run: php actualizar.php  # Ajusta la ruta si es necesario
-
-      # Paso 4: Verificar si el archivo de informe existe y procesar el resultado
-      - name: Generar informe
-        run: |
-          if [ -f resultado.txt ]; then
-            echo "El proceso se ejecutó correctamente, se generó el archivo de informe."
-          else
-            echo "Algo fue mal en el proceso, no se generó el archivo de informe."
-            exit 1
-          fi
-
-      # Paso 5: Commit y push del informe a GitHub (si se generó correctamente)
-      - name: Commit y push de los resultados
-        if: success()
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add resultado.txt  # Asegúrate de que el archivo resultado.txt exista
-          git commit -m "Informe generado automáticamente"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token para hacer el push
+        run: php actualizar.php  # Asegúrate de que el script esté en la ruta adecuada
