@@ -1,7 +1,7 @@
 <?php
-// Incluir librerías necesarias
-use \DateTime;
-use \DateInterval;
+// Establecer la zona horaria a Europa/Madrid
+date_default_timezone_set('Europe/Madrid');
+
 
 // Leer datos desde los archivos
 $AUTHORIZATION_BEARER = trim(file_get_contents('AUTHORIZATION_BEARER.ini'));
