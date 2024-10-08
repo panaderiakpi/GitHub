@@ -24,7 +24,7 @@ jobs:
 
       # Paso 3: Ejecutar el script PHP "ejecutar.php"
       - name: Ejecutar el script PHP
-        run: php ejecutar.php  # Ajusta la ruta si es necesario
+        run: php actualizar.php  # Ajusta la ruta si es necesario
 
       # Paso 4: Verificar si el archivo de informe existe y procesar el resultado
       - name: Generar informe
