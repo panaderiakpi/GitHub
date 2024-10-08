@@ -71,7 +71,7 @@ verificar_expiracion_token($jwt_data);
 
 // Función para obtener el `device_id` (corregida para forzar HTTP/1.1)
 function get_devices($id_user, $AUTHORIZATION_BEARER) {
-    $url = "https://auth.dof6.com/movistarplus/webplayer/accounts/{$id_user}/devices/?qspVersion=ssp";
+    $url = "https://auth.dof6.com/movistarplus/webplayer/accounts/{$id_user}/devices/?qspVersion=ssp"; // Reemplaza con el dominio correcto
 
     $headers = [
         'Accept' => 'application/json, text/javascript, */*; q=0.01',
@@ -97,9 +97,9 @@ function get_devices($id_user, $AUTHORIZATION_BEARER) {
     return trim($response, '"');
 }
 
-// Función para obtener un nuevo access_token usando el refresh_token
+// Función para obtener un nuevo access_token usando el refresh_token (Dropbox en este caso)
 function refrescar_access_token($refresh_token, $client_id, $client_secret) {
-    $url = "https://api.oauth2server.com/token"; // URL del servidor OAuth2 para obtener un nuevo token
+    $url = "https://api.dropboxapi.com/oauth2/token"; // Dropbox OAuth 2.0 token endpoint
 
     $data = http_build_query([
         'grant_type' => 'refresh_token',
@@ -151,7 +151,7 @@ echo "Nuevo access_token guardado correctamente.\n";
 
 // Función para obtener el token de 10 días
 function get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id) {
-    $url = "https://clientservices.dof6.com/movistarplus/webplayer/sdp/mediaPlayers/{$device_id}/initData?qspVersion=ssp&version=8&status=default";
+    $url = "https://clientservices.dof6.com/movistarplus/webplayer/sdp/mediaPlayers/{$device_id}/initData?qspVersion=ssp&version=8&status=default"; // Reemplaza con el dominio correcto
     
     $data = [
         'accountNumber' => $id_user,
@@ -192,9 +192,9 @@ function get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id) {
     return $decoded_response['accessToken'];
 }
 
-// Función para refrescar el token de 24 horas
+// Función para refrescar el token de 24 horas (Movistar+ o el servicio que utilices)
 function refrescar_token_diario($id_user, $AUTHORIZATION_BEARER, $device_id) {
-    $url = "https://idserver.dof6.com/{$id_user}/devices/webplayer/cdn/token/refresh";
+    $url = "https://idserver.dof6.com/{$id_user}/devices/webplayer/cdn/token/refresh"; // Reemplaza con el dominio correcto
     
     // Vamos a enviar un cuerpo vacío en formato JSON
     $data = json_encode(['device_id' => $device_id]);
