@@ -3,6 +3,7 @@ name: Actualizar BTF
 on:
   schedule:
     - cron: '0 10 * * *' # Se ejecuta a las 10:00 AM cada día
+      workflow_dispatch:  # Permitir la ejecución manual
 
 jobs:
   ejecutar-php-script:
