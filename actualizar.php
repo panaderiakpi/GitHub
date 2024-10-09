@@ -1,6 +1,4 @@
 <?php
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 
 // Datos necesarios
 $AUTHORIZATION_BEARER = trim(file_get_contents('AUTHORIZATION_BEARER.ini')); // Authorization bearer leído de archivo
@@ -123,11 +121,14 @@ function obtener_token_dropbox($app_key, $app_secret, $refresh_token) {
     }
 }
 
-// Función para subir archivo a Dropbox
+<?php
+// Replace obtener_token_dropbox function with direct upload logic
 function subir_archivo_dropbox($archivo_salida) {
-    global $REFRESH_TOKEN_DROPBOX;
+    global $REFRESH_TOKEN_DROPBOX;  // Make sure this variable contains the refresh token
 
+    // Dropbox API URL for file upload
     $url = "https://content.dropboxapi.com/2/files/upload";
+    // Set up the headers for the API request
     $headers = [
         "Authorization: Bearer $REFRESH_TOKEN_DROPBOX",
         "Content-Type: application/octet-stream",
@@ -139,28 +140,37 @@ function subir_archivo_dropbox($archivo_salida) {
         ])
     ];
 
+    // Get the content of the file you want to upload
     $file_content = file_get_contents($archivo_salida);
+    if ($file_content === false) {
+        die("Error leyendo el contenido del archivo.");
+    }
+
+    // Initialize curl for the API request
     $curl = curl_init($url);
     curl_setopt($curl, CURLOPT_POST, true);
     curl_setopt($curl, CURLOPT_POSTFIELDS, $file_content);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);  // Return the response as a string
 
+    // Execute the request
     $response = curl_exec($curl);
+
+    // Handle any errors during the upload
     if (curl_errno($curl)) {
         die("Error en la subida a Dropbox: " . curl_error($curl));
     }
     curl_close($curl);
 
-    return json_decode($response, true);
+    return json_decode($response, true);  // Decode the JSON response from Dropbox
 }
 
 // Subir archivo a Dropbox si es necesario
-if ($REFRESH_TOKEN_DROPBOX) {
+if (isset($REFRESH_TOKEN_DROPBOX)) {
     $resultado_dropbox = subir_archivo_dropbox($ARCHIVO_SALIDA);
     if (isset($resultado_dropbox['path_lower'])) {
-        // Generar el enlace de descarga con dl=1
-        $url_dropbox = 'https://www.dropbox.com/home' . $resultado_dropbox['path_lower'] . '?dl=1';
+        // Generate the Dropbox link ending with dl=1 for direct download
+        $url_dropbox = 'https://www.dropbox.com/scl/fi' . $resultado_dropbox['path_lower'] . '?dl=1';
         echo "Archivo subido a Dropbox exitosamente. Enlace de descarga: " . $url_dropbox . "\n";
     } else {
         echo "Error al subir archivo a Dropbox.\n";
@@ -168,3 +178,4 @@ if ($REFRESH_TOKEN_DROPBOX) {
 } else {
     echo "--- PROCEDIMIENTO FINALIZADO CON ÉXITO. ¡PAZ Y AMOR, Y EL PLUS PAL SALÓN! ---\n";
 }
+?>
