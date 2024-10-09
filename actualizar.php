@@ -5,7 +5,7 @@ use GuzzleHttp\Exception\RequestException;
 // Datos necesarios
 $AUTHORIZATION_BEARER = trim(file_get_contents('AUTHORIZATION_BEARER.ini')); // Authorization bearer leído de archivo
 $ARCHIVO_ORIGEN_O_URL = "Movistar_base.m3u"; // Archivo de origen
-$ARCHIVO_SALIDA = "btf.m3u"; // Archivo de salida
+$ARCHIVO_SALIDA = "gitbtf.m3u"; // Archivo de salida
 $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw"; // API App key Dropbox
 $APP_SECRET_DROPBOX = "629f1z2kzqmpqit"; // API App secret Dropbox
 $REFRESH_TOKEN_DROPBOX = "0VakNqGAM6QAAAAAAAAAAaed3z_RGR57MDxB6iiwhDXt9VqEIP5BvSgwrHO2m9w4"; // API refresh token Dropbox
