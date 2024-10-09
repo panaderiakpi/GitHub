@@ -1,27 +1,25 @@
-name: Ejecutar Script PHP Diario
+name: Actualizar BTF
 
-# Programar la ejecución diaria a las 22:00 UTC
 on:
   schedule:
-    - cron: '0 22 * * *'  # Ejecutar diariamente a las 22:00 UTC
-  workflow_dispatch:  # Permitir la ejecución manual
+    - cron: '0 10 * * *' # Se ejecuta a las 10:00 AM cada día
 
 jobs:
   ejecutar-php-script:
     runs-on: ubuntu-latest
 
     steps:
-      # Paso 1: Descargar el código del repositorio
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      # Paso 2: Configurar PHP
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '7.4'  # Cambiar la versión si es necesario
-          tools: composer
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4' # Versión de PHP que estás usando
+        tools: composer
 
-      # Paso 3: Ejecutar el script PHP "actualizar.php"
-      - name: Ejecutar el script PHP
-        run: php actualizar.php  # Asegúrate de que el script esté en la ruta adecuada
+    - name: Install PHP dependencies
+      run: composer require guzzlehttp/guzzle
+
+    - name: Run PHP script
+      run: php actualizar.php
