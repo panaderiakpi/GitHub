@@ -123,56 +123,48 @@ function obtener_token_dropbox($app_key, $app_secret, $refresh_token) {
     }
 }
 
-// Subir archivo a Dropbox
-function subir_a_dropbox($archivo_salida, $dropbox_token) {
-    global $DROPBOX_API_URL;
+// Función para subir archivo a Dropbox
+function subir_archivo_dropbox($archivo_salida) {
+    global $REFRESH_TOKEN_DROPBOX;
 
-    if (!$dropbox_token) {
-        echo "Error: No se pudo obtener el token de Dropbox.\n";
-        return false;
-    }
+    $url = "https://content.dropboxapi.com/2/files/upload";
+    $headers = [
+        "Authorization: Bearer $REFRESH_TOKEN_DROPBOX",
+        "Content-Type: application/octet-stream",
+        "Dropbox-API-Arg: " . json_encode([
+            "path" => "/" . basename($archivo_salida),
+            "mode" => "overwrite",
+            "autorename" => true,
+            "mute" => false
+        ])
+    ];
 
-    $client = new Client();
-    try {
-        $response = $client->post($DROPBOX_API_URL, [
-            'headers' => [
-                'Authorization' => "Bearer $dropbox_token",
-                'Dropbox-API-Arg' => json_encode([
-                    "path" => "/$archivo_salida",
-                    "mode" => "overwrite",
-                    "autorename" => true
-                ]),
-                'Content-Type' => 'application/octet-stream',
-            ],
-            'body' => fopen($archivo_salida, 'rb')
-        ]);
-        echo "Archivo subido a Dropbox correctamente.\n";
-        return true;
-    } catch (RequestException $e) {
-        echo "Error al subir el archivo a Dropbox: " . $e->getMessage() . "\n";
-        return false;
+    $file_content = file_get_contents($archivo_salida);
+    $curl = curl_init($url);
+    curl_setopt($curl, CURLOPT_POST, true);
+    curl_setopt($curl, CURLOPT_POSTFIELDS, $file_content);
+    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($curl);
+    if (curl_errno($curl)) {
+        die("Error en la subida a Dropbox: " . curl_error($curl));
     }
+    curl_close($curl);
+
+    return json_decode($response, true);
 }
 
-// Obtener el token de acceso de Dropbox usando el refresh token
-$dropbox_token = obtener_token_dropbox($APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX);
-
-// Subir archivo a Dropbox
-if (subir_a_dropbox($ARCHIVO_SALIDA, $dropbox_token)) {
-    echo "Subida a Dropbox realizada con éxito.\n";
+// Subir archivo a Dropbox si es necesario
+if ($REFRESH_TOKEN_DROPBOX) {
+    $resultado_dropbox = subir_archivo_dropbox($ARCHIVO_SALIDA);
+    if (isset($resultado_dropbox['path_lower'])) {
+        // Generar el enlace de descarga con dl=1
+        $url_dropbox = 'https://www.dropbox.com/home' . $resultado_dropbox['path_lower'] . '?dl=1';
+        echo "Archivo subido a Dropbox exitosamente. Enlace de descarga: " . $url_dropbox . "\n";
+    } else {
+        echo "Error al subir archivo a Dropbox.\n";
+    }
+} else {
+    echo "--- PROCEDIMIENTO FINALIZADO CON ÉXITO. ¡PAZ Y AMOR, Y EL PLUS PAL SALÓN! ---\n";
 }
-
-// Crear el informe final
-$hora_actual = date('d/m/Y H:i:s');
-$contenido = "Hora de la actualización: $hora_actual\n";
-$contenido .= "Código de cliente: '$id_user'\n";
-$contenido .= "Authorization bearer válido hasta: " . $validez_token->format('d/m/Y H:i:s') . "\n";
-$contenido .= "Token de 24 horas de M+: '$token_diario'\n";
-$contenido .= "Archivo de origen: '$ARCHIVO_ORIGEN_O_URL'\n";
-$contenido .= "Archivo de destino: '$ARCHIVO_SALIDA'\n";
-$contenido .= "Subida a Dropbox: " . ($dropbox_token ? "Sí" : "No") . "\n";
-
-file_put_contents($ARCHIVO_PROCESO_FINALIZADO, $contenido);
-echo "Informe generado correctamente en '$ARCHIVO_PROCESO_FINALIZADO'.\n";
-
-?>
