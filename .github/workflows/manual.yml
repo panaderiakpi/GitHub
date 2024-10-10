@@ -11,4 +11,4 @@ jobs:
 
     steps:
       - name: Trigger PHP script on InfinityFree
-        run: curl -X GET http://panaderiakpi.000.pe/Plus/actualizar.php?i=2
+        run: curl -k -X GET https://yourdomain.infinityfree.net/actualizar.php
