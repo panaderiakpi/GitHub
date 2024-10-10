@@ -19,8 +19,8 @@ $DROPBOX_API_LIST_FOLDER_URL = "https://api.dropboxapi.com/2/files/list_folder";
 // Variables para el informe
 $fecha_ejecucion = date("D M d H:i:s T Y"); // Hora de ejecución en Europa/Madrid
 $cambios_realizados = false; // Para verificar si hubo cambios
-$codigo_cliente = "10690003006537-TEF"; // Código de cliente simulado (puedes modificarlo según tu script)
-$fecha_validez_bearer = "15/10/2024-17:09:57"; // Fecha de validez del bearer (actualiza según tu script)
+$codigo_cliente = ""; // Código de cliente simulado (puedes modificarlo según tu script)
+$fecha_validez_bearer = ""; // Fecha de validez del bearer (actualiza según tu script)
 $token_24h = ''; // Será asignado más adelante al generarse
 $enlace_dropbox_m3u = ''; // Enlace final que se asignará después de la subida a Dropbox del archivo M3U
 $enlace_dropbox_informe = ''; // Enlace final que se asignará después de la subida a Dropbox del archivo de informe
