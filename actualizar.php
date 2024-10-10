@@ -1,5 +1,8 @@
 <?php
 
+// Configurar la zona horaria para Europa/Madrid
+date_default_timezone_set('Europe/Madrid');
+
 // Datos necesarios
 $AUTHORIZATION_BEARER = trim(file_get_contents('AUTHORIZATION_BEARER.ini'));
 $ARCHIVO_ORIGEN_O_URL = "Movistar_base.m3u";
@@ -10,13 +13,15 @@ $REFRESH_TOKEN_DROPBOX = "0VakNqGAM6QAAAAAAAAAAaed3z_RGR57MDxB6iiwhDXt9VqEIP5BvS
 $ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";
 $DROPBOX_API_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 $DROPBOX_API_TOKEN_URL = "https://api.dropbox.com/oauth2/token";
+$DROPBOX_API_SHARED_LINK_URL = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings";
 
-$fecha_ejecucion = date("D M d H:i:s T Y"); // Hora de ejecución
-$cambios_realizados = false; // Para verificar si hubo cambios, esto se actualizará más adelante
-$codigo_cliente = "10690003006537-TEF"; // Aquí puedes usar la variable que captures
-$fecha_validez_bearer = "15/10/2024-17:09:57"; // Simulando la fecha del bearer (actualiza según el script)
-$token_24h = ''; // Será asignado al generarse
-$enlace_dropbox = ''; // Será asignado después de subir a Dropbox
+// Variables para el informe
+$fecha_ejecucion = date("D M d H:i:s T Y"); // Hora de ejecución en Europa/Madrid
+$cambios_realizados = false; // Para verificar si hubo cambios
+$codigo_cliente = "10690003006537-TEF"; // Código de cliente simulado (puedes modificarlo según tu script)
+$fecha_validez_bearer = "15/10/2024-17:09:57"; // Fecha de validez del bearer (actualiza según tu script)
+$token_24h = ''; // Será asignado más adelante al generarse
+$enlace_dropbox = ''; // Enlace final que se asignará después de la subida a Dropbox
 
 // Crear el informe base
 file_put_contents($ARCHIVO_PROCESO_FINALIZADO, "Proceso en ejecución...\n");
@@ -97,7 +102,7 @@ function obtener_access_token_dropbox() {
 
 // Subir archivo a Dropbox utilizando curl
 function subir_archivo_dropbox($archivo_salida) {
-    global $DROPBOX_API_UPLOAD_URL, $enlace_dropbox;
+    global $DROPBOX_API_UPLOAD_URL, $DROPBOX_API_SHARED_LINK_URL, $enlace_dropbox;
 
     $access_token = obtener_access_token_dropbox();
     if (!$access_token) {
@@ -133,9 +138,38 @@ function subir_archivo_dropbox($archivo_salida) {
     curl_close($curl);
 
     $resultado_dropbox = json_decode($response, true);
+
+    // Obtener el enlace público del archivo
     if (isset($resultado_dropbox['path_lower'])) {
-        $enlace_dropbox = 'https://www.dropbox.com/scl/fi' . $resultado_dropbox['path_lower'] . '?dl=1';
-        echo "Archivo subido a Dropbox exitosamente. Enlace de descarga: " . $enlace_dropbox . "\n";
+        $path_lower = $resultado_dropbox['path_lower'];
+
+        // Crear el enlace compartido
+        $curl = curl_init($DROPBOX_API_SHARED_LINK_URL);
+        $shared_link_headers = [
+            "Authorization: Bearer $access_token",
+            "Content-Type: application/json"
+        ];
+        $shared_link_data = json_encode([
+            "path" => $path_lower,
+            "settings" => ["requested_visibility" => "public"]
+        ]);
+
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $shared_link_data);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $shared_link_headers);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+        $shared_link_response = curl_exec($curl);
+        curl_close($curl);
+
+        $shared_link_result = json_decode($shared_link_response, true);
+        if (isset($shared_link_result['url'])) {
+            // Modificar el enlace para que sea de descarga directa (dl=1)
+            $enlace_dropbox = str_replace('dl=0', 'dl=1', $shared_link_result['url']);
+            echo "Archivo subido a Dropbox exitosamente. Enlace de descarga: $enlace_dropbox\n";
+        } else {
+            echo "Error al crear el enlace compartido de Dropbox.\n";
+        }
     } else {
         echo "Error al subir archivo a Dropbox.\n";
     }
