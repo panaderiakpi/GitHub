@@ -221,7 +221,7 @@ if (archivo_existe_dropbox(basename($ARCHIVO_SALIDA))) {
 subir_archivo_dropbox($ARCHIVO_SALIDA, $enlace_dropbox_m3u);
 
 // Simular generación de token de 24 horas
-$token_24h = 'eyJhbGciOiJFUzI1NiIsImtpZCI6ImI1OGNhNGM0NGFiOTQ0Y2FiY2U4N2FjNGJmZmI4MDNkIiwidHlwIjoiYXQrand0In0...'; // Actualiza con el valor real generado
+$token_24h = ''; // Actualiza con el valor real generado
 
 // Crear informe de resultado
 $informe = "Ejecución realizada el: $fecha_ejecucion\n";
