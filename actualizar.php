@@ -1,165 +1,162 @@
 <?php
 
-// Configurar la zona horaria para Europa/Madrid
-date_default_timezone_set('Europe/Madrid');
-
-// Cargar datos necesarios desde archivos de configuración
-$AUTHORIZATION_BEARER = trim(file_get_contents('AUTHORIZATION_BEARER.ini'));
-$ARCHIVO_ORIGEN_O_URL = "Movistar_base.m3u";
-$ARCHIVO_SALIDA = "btf.m3u";
-$APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";
-$APP_SECRET_DROPBOX = "629f1z2kzqmpqit";
-$REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";
-$DIAS_SIN_REFRESCO = 7;
-$ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";
-$MENSAJE_TERMUX = "Algo fue mal en el proceso, sin plus en el salón";
-
-// Inicializar el archivo de proceso finalizado
-file_put_contents($ARCHIVO_PROCESO_FINALIZADO, $MENSAJE_TERMUX);
-
-// Leer claves desde archivo de configuración INI
-$config = parse_ini_file('Cas_Id_claves.ini', true);
-$Cas_Id_claves = $config['Cas_Id_claves'] ?? [];
-
-// Decodificar el JWT para obtener deviceId, id_user y validez del token
-try {
-    $jwt_data = json_decode(base64_decode(explode('.', $AUTHORIZATION_BEARER)[1] . '=='), true);
-    $id_dispositivo = $jwt_data['deviceId'] ?? 'NO EXISTE';
-    $id_user = $jwt_data['accountNumber'] ?? 'NO EXISTE';
-    $segmento_cliente = $jwt_data['clientSegment'] ?? 'NO EXISTE';
-    $sptoken = $jwt_data['sptoken'] ?? 'NO EXISTE';
-    $validez_token = date('d/m/Y-H:i:s', $jwt_data['exp']);
-} catch (Exception $e) {
-    die("No se pudo decodificar el JWT.");
-}
-
-echo "Código de cliente de M+ '$id_user' decodificado (segmento de cliente: $segmento_cliente, ID de dispositivo: $id_dispositivo).\n";
-echo "Authorization bearer de M+ válido hasta: $validez_token\n";
-
-// Función para hacer solicitudes HTTP con cURL
-function hacer_peticion_curl($url, $headers, $data = null, $method = 'GET') {
-    $curl = curl_init();
-
-    curl_setopt($curl, CURLOPT_URL, $url);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-
-    if ($method === 'POST') {
-        curl_setopt($curl, CURLOPT_POST, true);
-        if ($data) {
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        }
+// Función para cargar el token desde AUTHORIZATION_BEARER.ini
+function cargar_autorizacion($archivo_ini) {
+    if (!file_exists($archivo_ini)) {
+        die("Error: El archivo $archivo_ini no existe.");
     }
 
-    $response = curl_exec($curl);
-    $http_status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    $token = trim(file_get_contents($archivo_ini));
+    if (empty($token)) {
+        die("Error: El archivo $archivo_ini está vacío o el token no es válido.");
+    }
 
-    if ($http_status !== 200) {
-        die("Error HTTP $http_status en la solicitud a $url");
+    return $token;
+}
+
+// Decodificar el token JWT y extraer el código de cliente, fecha de expiración, etc.
+function decodificar_jwt($jwt_token) {
+    $partes = explode('.', $jwt_token);
+    if (count($partes) < 2) {
+        die("Error: El token JWT no tiene el formato esperado.");
+    }
+
+    $payload_base64 = str_replace(['-', '_'], ['+', '/'], $partes[1]);
+    $padding = strlen($payload_base64) % 4;
+    if ($padding) {
+        $payload_base64 .= str_repeat('=', 4 - $padding);
+    }
+
+    $payload = base64_decode($payload_base64);
+    if (!$payload) {
+        die("Error: No se pudo decodificar el token JWT.");
+    }
+
+    $datos = json_decode($payload, true);
+    return $datos;
+}
+
+// Realizar una petición POST utilizando cURL con los headers y datos proporcionados
+function hacer_peticion_post($url, $datos, $headers) {
+    $curl = curl_init($url);
+
+    curl_setopt($curl, CURLOPT_POST, true);
+    curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($datos)); // Enviar los datos como JSON
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); // Forzar HTTP/1.1
+    curl_setopt($curl, CURLOPT_ENCODING, '');  // Desactivar chunked encoding
+    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); // Ignorar la verificación SSL si causa problemas
+
+    $respuesta = curl_exec($curl);
+
+    if (curl_errno($curl)) {
+        echo "Error en la solicitud POST: " . curl_error($curl) . "\n";
+        curl_close($curl);
+        return null;
+    }
+
+    $http_status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    if ($http_status != 200) {
+        echo "Error en la solicitud POST. Código de estado HTTP: $http_status\n";
+        echo "Respuesta del servidor: " . $respuesta . "\n";  // Imprimir respuesta completa para más detalles
+        curl_close($curl);
+        return null;
     }
 
     curl_close($curl);
-
-    return $response;
+    return json_decode($respuesta, true);
 }
 
-// Obtener el device_id necesario
-function get_devices($id_user, $AUTHORIZATION_BEARER) {
-    $url = "https://auth.dof6.com/movistarplus/webplayer/accounts/$id_user/devices/?qspVersion=ssp";
+// Obtener el token diario desde la API
+function obtener_token_diario($authorization_bearer) {
+    $url_token = "https://idserver.dof6.com/00QSp000006KYmsMAG-L/devices/webplayer/cdn/token/refresh";
+    
     $headers = [
-        'Authorization: Bearer ' . $AUTHORIZATION_BEARER,
-        'Accept: application/json',
-        'User-Agent: Mozilla/5.0'
+        'Authorization: Bearer ' . $authorization_bearer,
+        'Accept: */*',
+        'Accept-Encoding: gzip, deflate, br',
+        'Accept-Language: es-ES,es;q=0.9',
+        'Origin: https://ver.movistarplus.es',
+        'Referer: https://ver.movistarplus.es/canales?id_perfil=SUSCRI2&suscripcion=UT-DO0003,UT-MPARFU&ui=MPLUS&demarcation=0',
+        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 OPR/113.0.0.0',
+        'Content-Type: application/json'
     ];
 
-    return hacer_peticion_curl($url, $headers, null, 'POST');
+    $datos_a_enviar = (object)[]; // Cuerpo vacío en formato JSON
+
+    $respuesta_token = hacer_peticion_post($url_token, $datos_a_enviar, $headers);
+
+    if ($respuesta_token && isset($respuesta_token['access_token'])) {
+        return $respuesta_token['access_token'];
+    } else {
+        die("Error: No se pudo obtener el token diario.");
+    }
 }
 
-// Obtener el token de 10 días
-function get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id) {
-    $url = "https://clientservices.dof6.com/movistarplus/webplayer/sdp/mediaPlayers/$device_id/initData?qspVersion=ssp&version=8&status=default";
-    $data = json_encode([
-        'accountNumber' => $id_user,
-        'userProfile' => '0',
-        'streamMiscellanea' => 'HTTPS',
-        'deviceType' => 'WP_OTT',
-        'deviceManufacturerProduct' => 'Firefox',
-        'streamDRM' => 'Widevine',
-        'streamFormat' => 'DASH'
-    ]);
+// Procesar el archivo M3U añadiendo el token diario y forzando la codificación UTF-8
+function procesar_m3u($archivo_origen, $archivo_salida, $token_diario) {
+    if (!file_exists($archivo_origen)) {
+        die("Error: El archivo M3U de origen no existe.");
+    }
 
-    $headers = [
-        'Authorization: Bearer ' . $AUTHORIZATION_BEARER,
-        'Content-Type: application/json',
-        'X-Movistarplus-Deviceid: ' . $device_id,
-    ];
+    $lines = file($archivo_origen, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $archivo = fopen($archivo_salida, 'w');
 
-    return json_decode(hacer_peticion_curl($url, $headers, $data, 'POST'), true)['accessToken'];
+    if ($archivo === false) {
+        die("Error: No se pudo abrir el archivo de salida.");
+    }
+
+    // Escribir el BOM de UTF-8 para asegurar que el archivo esté codificado en UTF-8
+    fwrite($archivo, "\xEF\xBB\xBF");
+
+    foreach ($lines as $line) {
+        if (strpos($line, "http") === 0) {
+            fwrite($archivo, "#KODIPROP:inputstream.adaptive.stream_headers=X-TCDN-token=$token_diario\n");
+        }
+        fwrite($archivo, $line . "\n");
+    }
+
+    fclose($archivo);
+    echo "Archivo final '$archivo_salida' creado con éxito.\n";
 }
 
-// Procesar la lista M3U
-$url_epg = "https://ottcache.dof6.com/movistarplus/webplayer/DIFUSION/contents/epg";
-$epg_data = json_decode(hacer_peticion_curl($url_epg, []), true);
+// Generar el archivo de informe con la información solicitada
+function generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida) {
+    $informe = "resultado.txt";
+    $hora_actual = date('d/m/Y H:i:s');
+    
+    // Crear contenido del informe
+    $contenido = "Hora de la actualización: $hora_actual\n";
+    $contenido .= "Código de cliente: '$id_user'\n";
+    $contenido .= "Authorization bearer válido hasta: $expiracion_bearer\n";
+    $contenido .= "Token de 24 horas de M+: '$token_diario'\n";
+    $contenido .= "Archivo de origen: '$archivo_origen'\n";
+    $contenido .= "Archivo de destino: '$archivo_salida'\n";
+    $contenido .= "--- PROCEDIMIENTO FINALIZADO CON ÉXITO. ¡PAZ Y AMOR, Y EL PLUS PAL SALÓN! ---\n";
 
-// Crear la lista M3U con el token de 24 horas
-$extracted_data = ['#EXTM3U url-tvg="https://raw.githubusercontent.com/dracohe/CARLOS/master/guide_IPTV.xml,https://raw.githubusercontent.com/davidmuma/EPG_dobleM/master/guiatv_sincolor.xml.gz"'];
-foreach ($epg_data as $entry) {
-    $nombre = $entry['Nombre'] ?? '';
-    $Cas_Id = $entry['CasId'] ?? '';
-    $mpd = $entry['PuntoReproduccion'] ?? '';
-    $logo = $entry['Logo'] ?? '';
-    $clave = $Cas_Id_claves[$Cas_Id] ?? '';
-
-    $line1 = "#EXTINF:-1 tvg-logo=\"$logo\" group-title=\"MOVISTAR +\",$nombre";
-    $line2 = '#KODIPROP:inputstreamaddon=inputstream.adaptive';
-    $line3 = '#KODIPROP:inputstream.adaptive.manifest_type=mpd';
-    $line4 = '#KODIPROP:inputstream.adaptive.license_type=clearkey';
-    $line5 = "#KODIPROP:inputstream.adaptive.license_key=$clave";
-    $line6 = $mpd;
-
-    $extracted_data[] = implode("\n", [$line1, $line2, $line3, $line4, $line5, $line6]);
+    // Sobrescribir el contenido en el archivo resultado.txt
+    file_put_contents($informe, $contenido);
+    echo "Informe generado: $informe\n";
 }
 
-// Guardar la lista M3U generada en el archivo de salida
-file_put_contents($ARCHIVO_SALIDA, implode("\n\n", $extracted_data));
-echo "Información extraída y guardada en $ARCHIVO_SALIDA\n";
+// Iniciar el proceso completo
+$AUTHORIZATION_BEARER = cargar_autorizacion('AUTHORIZATION_BEARER.ini'); // Leer el token desde el archivo .ini
 
-// Obtener el `device_id` y el nuevo token
-$device_id = get_devices($id_user, $AUTHORIZATION_BEARER);
-$ten_days_token = get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id);
+// Decodificar el token JWT para obtener información del cliente
+$jwt_data = decodificar_jwt($AUTHORIZATION_BEARER);
+$id_user = $jwt_data['accountNumber'] ?? 'Desconocido';
+$expiracion_bearer = date('d/m/Y H:i:s', $jwt_data['exp']);
 
-if ($ten_days_token) {
-    echo "Nuevo authorization bearer de 10 días: $ten_days_token\n";
-    file_put_contents('AUTHORIZATION_BEARER.ini', $ten_days_token);
-}
+// Obtener el token diario
+$token_diario = obtener_token_diario($AUTHORIZATION_BEARER);
 
-// Subir el archivo resultante a Dropbox
-require 'vendor/autoload.php';  // Cargar el SDK de Dropbox
+// Procesar el archivo M3U y asegurarse que se guarde en UTF-8
+$archivo_origen = "Movistar_base.m3u";
+$archivo_salida = "gifbtf.m3u";
+procesar_m3u($archivo_origen, $archivo_salida, $token_diario);
 
-function subir_archivo_dropbox($archivo_salida) {
-    global $APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX;
-
-    $dbx = new \Dropbox\Client([
-        'app_key' => $APP_KEY_DROPBOX,
-        'app_secret' => $APP_SECRET_DROPBOX,
-        'refresh_token' => $REFRESH_TOKEN_DROPBOX,
-    ]);
-
-    $file = fopen($archivo_salida, 'rb');
-    $result = $dbx->files()->upload("/$archivo_salida", \Dropbox\WriteMode::overwrite(), $file);
-    fclose($file);
-
-    $shared_link = $dbx->sharing()->create_shared_link_with_settings("/$archivo_salida");
-    $shared_link_url = str_replace('dl=0', 'dl=1', $shared_link->url);
-
-    return $shared_link_url;
-}
-
-// Subir los archivos a Dropbox
-$url_compartir_m3u = subir_archivo_dropbox($ARCHIVO_SALIDA);
-$url_compartir_resultado = subir_archivo_dropbox($ARCHIVO_PROCESO_FINALIZADO);
-
-echo "Archivo final subido a Dropbox: $url_compartir_m3u\n";
-echo "Archivo resultado subido a Dropbox: $url_compartir_resultado\n";
+// Generar informe
+generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida);
 
 ?>
