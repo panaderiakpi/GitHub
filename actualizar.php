@@ -4,8 +4,8 @@
 $AUTHORIZATION_BEARER = trim(file_get_contents('AUTHORIZATION_BEARER.ini'));
 $ARCHIVO_ORIGEN_O_URL = "Movistar_base.m3u";
 $ARCHIVO_SALIDA = "gitbtf.m3u";
-$APP_KEY_DROPBOX = "dlp5gp2wnpwpemw"
-$APP_SECRET_DROPBOX = "629f1z2kzqmpqit"
+$APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";
+$APP_SECRET_DROPBOX = "629f1z2kzqmpqit";
 $REFRESH_TOKEN_DROPBOX = "0VakNqGAM6QAAAAAAAAAAaed3z_RGR57MDxB6iiwhDXt9VqEIP5BvSgwrHO2m9w4";
 $ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";
 $DROPBOX_API_URL = "https://content.dropboxapi.com/2/files/upload";
