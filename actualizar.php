@@ -6,14 +6,15 @@ date_default_timezone_set('Europe/Madrid');
 // Datos necesarios
 $AUTHORIZATION_BEARER = trim(file_get_contents('AUTHORIZATION_BEARER.ini'));
 $ARCHIVO_ORIGEN_O_URL = "Movistar_base.m3u";
-$ARCHIVO_SALIDA = "gitbtf.m3u";
+$ARCHIVO_SALIDA = "gitbtf.m3u";  // Archivo M3U que generamos
 $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";
 $APP_SECRET_DROPBOX = "629f1z2kzqmpqit";
 $REFRESH_TOKEN_DROPBOX = "0VakNqGAM6QAAAAAAAAAAaed3z_RGR57MDxB6iiwhDXt9VqEIP5BvSgwrHO2m9w4";
-$ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";
+$ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";  // Archivo de informe
 $DROPBOX_API_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 $DROPBOX_API_TOKEN_URL = "https://api.dropbox.com/oauth2/token";
 $DROPBOX_API_SHARED_LINK_URL = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings";
+$DROPBOX_API_LIST_FOLDER_URL = "https://api.dropboxapi.com/2/files/list_folder";
 
 // Variables para el informe
 $fecha_ejecucion = date("D M d H:i:s T Y"); // Hora de ejecución en Europa/Madrid
@@ -21,7 +22,8 @@ $cambios_realizados = false; // Para verificar si hubo cambios
 $codigo_cliente = "10690003006537-TEF"; // Código de cliente simulado (puedes modificarlo según tu script)
 $fecha_validez_bearer = "15/10/2024-17:09:57"; // Fecha de validez del bearer (actualiza según tu script)
 $token_24h = ''; // Será asignado más adelante al generarse
-$enlace_dropbox = ''; // Enlace final que se asignará después de la subida a Dropbox
+$enlace_dropbox_m3u = ''; // Enlace final que se asignará después de la subida a Dropbox del archivo M3U
+$enlace_dropbox_informe = ''; // Enlace final que se asignará después de la subida a Dropbox del archivo de informe
 
 // Crear el informe base
 file_put_contents($ARCHIVO_PROCESO_FINALIZADO, "Proceso en ejecución...\n");
@@ -61,7 +63,7 @@ foreach ($data as $entry) {
 }
 
 $new_content = implode("\n\n", $extracted_data);
-if (file_get_contents($ARCHIVO_SALIDA) !== $new_content) {
+if (!file_exists($ARCHIVO_SALIDA) || file_get_contents($ARCHIVO_SALIDA) !== $new_content) {
     file_put_contents($ARCHIVO_SALIDA, $new_content);
     $cambios_realizados = true;
     echo "Información extraída y guardada en $ARCHIVO_SALIDA\n";
@@ -100,9 +102,44 @@ function obtener_access_token_dropbox() {
     return $result['access_token'] ?? null;
 }
 
-// Subir archivo a Dropbox utilizando curl
-function subir_archivo_dropbox($archivo_salida) {
-    global $DROPBOX_API_UPLOAD_URL, $DROPBOX_API_SHARED_LINK_URL, $enlace_dropbox;
+// Función para verificar si un archivo ya existe en Dropbox
+function archivo_existe_dropbox($archivo) {
+    global $DROPBOX_API_LIST_FOLDER_URL;
+
+    $access_token = obtener_access_token_dropbox();
+    $headers = [
+        "Authorization: Bearer $access_token",
+        "Content-Type: application/json"
+    ];
+
+    $data = json_encode([
+        "path" => ""
+    ]);
+
+    $curl = curl_init($DROPBOX_API_LIST_FOLDER_URL);
+    curl_setopt($curl, CURLOPT_POST, true);
+    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($curl);
+    curl_close($curl);
+
+    $result = json_decode($response, true);
+
+    if (isset($result['entries'])) {
+        foreach ($result['entries'] as $entry) {
+            if ($entry['name'] === $archivo) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Función para subir un archivo a Dropbox y obtener el enlace
+function subir_archivo_dropbox($archivo_salida, &$enlace_dropbox) {
+    global $DROPBOX_API_UPLOAD_URL, $DROPBOX_API_SHARED_LINK_URL;
 
     $access_token = obtener_access_token_dropbox();
     if (!$access_token) {
@@ -178,7 +215,10 @@ function subir_archivo_dropbox($archivo_salida) {
 }
 
 // Subida del archivo M3U
-subir_archivo_dropbox($ARCHIVO_SALIDA);
+if (archivo_existe_dropbox(basename($ARCHIVO_SALIDA))) {
+    echo "El archivo $ARCHIVO_SALIDA ya existe en Dropbox. Será sobrescrito.\n";
+}
+subir_archivo_dropbox($ARCHIVO_SALIDA, $enlace_dropbox_m3u);
 
 // Simular generación de token de 24 horas
 $token_24h = 'eyJhbGciOiJFUzI1NiIsImtpZCI6ImI1OGNhNGM0NGFiOTQ0Y2FiY2U4N2FjNGJmZmI4MDNkIiwidHlwIjoiYXQrand0In0...'; // Actualiza con el valor real generado
@@ -189,14 +229,14 @@ $informe .= $cambios_realizados ? "Hubo cambios. El archivo ha sido modificado.\
 $informe .= "Código de cliente de M+ '$codigo_cliente' decodificado (segmento de cliente: 1 sptoken: NO EXISTE e ID de dispositivo: 1cdf6519bdc4480fa9c325d383301b41).\n";
 $informe .= "Authorization bearer de M+ válido hasta: $fecha_validez_bearer.\n";
 $informe .= "Token de 24 horas de M+ '$token_24h' generado.\n";
-$informe .= "Archivo final subido a Dropbox con enlace directo: $enlace_dropbox\n";
+$informe .= "Archivo final subido a Dropbox con enlace directo: $enlace_dropbox_m3u\n";
 $informe .= "--- PROCEDIMIENTO FINALIZADO CON ÉXITO. ¡PAZ Y AMOR, Y EL PLUS PAL SALÓN! ---\n";
 
 // Guardar el informe en el archivo 'resultado.txt'
 file_put_contents($ARCHIVO_PROCESO_FINALIZADO, $informe);
 
 // Subir el archivo de informe a Dropbox
-subir_archivo_dropbox($ARCHIVO_PROCESO_FINALIZADO);
+subir_archivo_dropbox($ARCHIVO_PROCESO_FINALIZADO, $enlace_dropbox_informe);
 
 echo "Informe de resultado generado y subido a Dropbox.\n";
 
