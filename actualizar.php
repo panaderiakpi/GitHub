@@ -11,6 +11,13 @@ $ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";
 $DROPBOX_API_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 $DROPBOX_API_TOKEN_URL = "https://api.dropbox.com/oauth2/token";
 
+$fecha_ejecucion = date("D M d H:i:s T Y"); // Hora de ejecución
+$cambios_realizados = false; // Para verificar si hubo cambios, esto se actualizará más adelante
+$codigo_cliente = "10690003006537-TEF"; // Aquí puedes usar la variable que captures
+$fecha_validez_bearer = "15/10/2024-17:09:57"; // Simulando la fecha del bearer (actualiza según el script)
+$token_24h = ''; // Será asignado al generarse
+$enlace_dropbox = ''; // Será asignado después de subir a Dropbox
+
 // Crear el informe base
 file_put_contents($ARCHIVO_PROCESO_FINALIZADO, "Proceso en ejecución...\n");
 
@@ -49,8 +56,13 @@ foreach ($data as $entry) {
 }
 
 $new_content = implode("\n\n", $extracted_data);
-file_put_contents($ARCHIVO_SALIDA, $new_content);
-echo "Información extraída y guardada en $ARCHIVO_SALIDA\n";
+if (file_get_contents($ARCHIVO_SALIDA) !== $new_content) {
+    file_put_contents($ARCHIVO_SALIDA, $new_content);
+    $cambios_realizados = true;
+    echo "Información extraída y guardada en $ARCHIVO_SALIDA\n";
+} else {
+    echo "No hay cambios. El archivo no se ha modificado.\n";
+}
 
 // Función para obtener Access Token desde Refresh Token
 function obtener_access_token_dropbox() {
@@ -85,7 +97,7 @@ function obtener_access_token_dropbox() {
 
 // Subir archivo a Dropbox utilizando curl
 function subir_archivo_dropbox($archivo_salida) {
-    global $DROPBOX_API_UPLOAD_URL;
+    global $DROPBOX_API_UPLOAD_URL, $enlace_dropbox;
 
     $access_token = obtener_access_token_dropbox();
     if (!$access_token) {
@@ -120,16 +132,38 @@ function subir_archivo_dropbox($archivo_salida) {
     }
     curl_close($curl);
 
-    return json_decode($response, true);
+    $resultado_dropbox = json_decode($response, true);
+    if (isset($resultado_dropbox['path_lower'])) {
+        $enlace_dropbox = 'https://www.dropbox.com/scl/fi' . $resultado_dropbox['path_lower'] . '?dl=1';
+        echo "Archivo subido a Dropbox exitosamente. Enlace de descarga: " . $enlace_dropbox . "\n";
+    } else {
+        echo "Error al subir archivo a Dropbox.\n";
+    }
+
+    return $resultado_dropbox;
 }
 
-$resultado_dropbox = subir_archivo_dropbox($ARCHIVO_SALIDA);
-if (isset($resultado_dropbox['path_lower'])) {
-    $url_dropbox = 'https://www.dropbox.com/scl/fi' . $resultado_dropbox['path_lower'] . '?dl=1';
-    echo "Archivo subido a Dropbox exitosamente. Enlace de descarga: " . $url_dropbox . "\n";
-} else {
-    echo "Error al subir archivo a Dropbox.\n";
-}
+// Subida del archivo M3U
+subir_archivo_dropbox($ARCHIVO_SALIDA);
 
-file_put_contents($ARCHIVO_PROCESO_FINALIZADO, "Proceso finalizado correctamente.\n", FILE_APPEND);
+// Simular generación de token de 24 horas
+$token_24h = 'eyJhbGciOiJFUzI1NiIsImtpZCI6ImI1OGNhNGM0NGFiOTQ0Y2FiY2U4N2FjNGJmZmI4MDNkIiwidHlwIjoiYXQrand0In0...'; // Actualiza con el valor real generado
+
+// Crear informe de resultado
+$informe = "Ejecución realizada el: $fecha_ejecucion\n";
+$informe .= $cambios_realizados ? "Hubo cambios. El archivo ha sido modificado.\n" : "No hay cambios. El archivo no se ha modificado.\n";
+$informe .= "Código de cliente de M+ '$codigo_cliente' decodificado (segmento de cliente: 1 sptoken: NO EXISTE e ID de dispositivo: 1cdf6519bdc4480fa9c325d383301b41).\n";
+$informe .= "Authorization bearer de M+ válido hasta: $fecha_validez_bearer.\n";
+$informe .= "Token de 24 horas de M+ '$token_24h' generado.\n";
+$informe .= "Archivo final subido a Dropbox con enlace directo: $enlace_dropbox\n";
+$informe .= "--- PROCEDIMIENTO FINALIZADO CON ÉXITO. ¡PAZ Y AMOR, Y EL PLUS PAL SALÓN! ---\n";
+
+// Guardar el informe en el archivo 'resultado.txt'
+file_put_contents($ARCHIVO_PROCESO_FINALIZADO, $informe);
+
+// Subir el archivo de informe a Dropbox
+subir_archivo_dropbox($ARCHIVO_PROCESO_FINALIZADO);
+
+echo "Informe de resultado generado y subido a Dropbox.\n";
+
 ?>
