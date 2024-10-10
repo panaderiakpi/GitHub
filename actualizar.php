@@ -1,5 +1,7 @@
 <?php
 
+require 'vendor/autoload.php';  // Asegúrate de tener el SDK de Dropbox instalado
+
 // Función para cargar el token desde AUTHORIZATION_BEARER.ini
 function cargar_autorizacion($archivo_ini) {
     if (!file_exists($archivo_ini)) {
@@ -140,6 +142,41 @@ function generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_o
     echo "Informe generado: $informe\n";
 }
 
+// Subir archivos a Dropbox
+function subir_a_dropbox($archivo_local, $nombre_remoto, $dropbox_token) {
+    $dropbox_url = 'https://content.dropboxapi.com/2/files/upload';
+    $headers = [
+        "Authorization: Bearer $dropbox_token",
+        "Content-Type: application/octet-stream",
+        "Dropbox-API-Arg: " . json_encode([
+            "path" => "/$nombre_remoto",
+            "mode" => "overwrite",
+            "autorename" => false
+        ])
+    ];
+
+    $file_content = file_get_contents($archivo_local);
+
+    $ch = curl_init($dropbox_url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $file_content);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($ch);
+    if (curl_errno($ch)) {
+        die("Error al subir el archivo a Dropbox: " . curl_error($ch));
+    }
+
+    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($http_status != 200) {
+        die("Error en la subida a Dropbox. Código HTTP: $http_status\nRespuesta: $response");
+    }
+
+    curl_close($ch);
+    echo "Archivo '$nombre_remoto' subido correctamente a Dropbox.\n";
+}
+
 // Iniciar el proceso completo
 $AUTHORIZATION_BEARER = cargar_autorizacion('AUTHORIZATION_BEARER.ini'); // Leer el token desde el archivo .ini
 
@@ -158,5 +195,14 @@ procesar_m3u($archivo_origen, $archivo_salida, $token_diario);
 
 // Generar informe
 generar_informe($id_user, $expiracion_bearer, $token_diario, $archivo_origen, $archivo_salida);
+
+// Subir archivos a Dropbox
+$APP_KEY_DROPBOX = "dlp5gp2wnpwpemw"; # API App key Dropbox (OPCIONAL)
+$APP_SECRET_DROPBOX = "629f1z2kzqmpqit"; # API App secret Dropbox (OPCIONAL)
+$REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  # API refresh token Dropbox (OPCIONAL)
+$dropbox_token = 'YOUR_DROPBOX_ACCESS_TOKEN'; // Reemplaza esto con tu token de acceso de Dropbox
+
+subir_a_dropbox($archivo_salida, "gifbtf.m3u", $dropbox_token);
+subir_a_dropbox("resultado.txt", "resultado.txt", $dropbox_token);
 
 ?>
