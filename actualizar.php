@@ -21,42 +21,6 @@ file_put_contents($ARCHIVO_PROCESO_FINALIZADO, $MENSAJE_TERMUX);
 $config = parse_ini_file('Cas_Id_claves.ini', true);
 $Cas_Id_claves = $config['Cas_Id_claves'] ?? [];
 
-// Endpoint de Movistar para obtener la lista EPG
-$url_epg = "https://ottcache.dof6.com/movistarplus/webplayer/DIFUSION/contents/epg";
-$response = file_get_contents($url_epg);
-
-if ($response === false) {
-    die("Error al realizar la solicitud EPG.");
-}
-
-$data = json_decode($response, true);
-if (json_last_error() !== JSON_ERROR_NONE) {
-    die("Error al decodificar JSON.");
-}
-
-// Extraer y construir el nuevo contenido M3U
-$extracted_data = ['#EXTM3U url-tvg="https://raw.githubusercontent.com/dracohe/CARLOS/master/guide_IPTV.xml,https://raw.githubusercontent.com/davidmuma/EPG_dobleM/master/guiatv_sincolor.xml.gz"'];
-foreach ($data as $entry) {
-    $nombre = $entry['Nombre'] ?? '';
-    $Cas_Id = $entry['CasId'] ?? '';
-    $mpd = $entry['PuntoReproduccion'] ?? '';
-    $logo = $entry['Logo'] ?? '';
-    $clave = $Cas_Id_claves[$Cas_Id] ?? '';
-
-    $line1 = "#EXTINF:-1 tvg-logo=\"$logo\" group-title=\"MOVISTAR +\",$nombre";
-    $line2 = '#KODIPROP:inputstreamaddon=inputstream.adaptive';
-    $line3 = '#KODIPROP:inputstream.adaptive.manifest_type=mpd';
-    $line4 = '#KODIPROP:inputstream.adaptive.license_type=clearkey';
-    $line5 = "#KODIPROP:inputstream.adaptive.license_key=$clave";
-    $line6 = $mpd;
-
-    $extracted_data[] = implode("\n", [$line1, $line2, $line3, $line4, $line5, $line6]);
-}
-
-// Guardar la lista M3U generada en el archivo de salida
-file_put_contents($ARCHIVO_SALIDA, implode("\n\n", $extracted_data));
-echo "Información extraída y guardada en $ARCHIVO_SALIDA\n";
-
 // Decodificar el JWT para obtener deviceId, id_user y validez del token
 try {
     $jwt_data = json_decode(base64_decode(explode('.', $AUTHORIZATION_BEARER)[1] . '=='), true);
@@ -72,30 +36,43 @@ try {
 echo "Código de cliente de M+ '$id_user' decodificado (segmento de cliente: $segmento_cliente, ID de dispositivo: $id_dispositivo).\n";
 echo "Authorization bearer de M+ válido hasta: $validez_token\n";
 
+// Función para hacer solicitudes HTTP con cURL
+function hacer_peticion_curl($url, $headers, $data = null, $method = 'GET') {
+    $curl = curl_init();
+
+    curl_setopt($curl, CURLOPT_URL, $url);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+    if ($method === 'POST') {
+        curl_setopt($curl, CURLOPT_POST, true);
+        if ($data) {
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        }
+    }
+
+    $response = curl_exec($curl);
+    $http_status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+    if ($http_status !== 200) {
+        die("Error HTTP $http_status en la solicitud a $url");
+    }
+
+    curl_close($curl);
+
+    return $response;
+}
+
 // Obtener el device_id necesario
 function get_devices($id_user, $AUTHORIZATION_BEARER) {
     $url = "https://auth.dof6.com/movistarplus/webplayer/accounts/$id_user/devices/?qspVersion=ssp";
     $headers = [
         'Authorization: Bearer ' . $AUTHORIZATION_BEARER,
-        'Accept: application/json, text/javascript, */*; q=0.01',
-        'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64)',
+        'Accept: application/json',
+        'User-Agent: Mozilla/5.0'
     ];
 
-    $options = [
-        'http' => [
-            'header' => implode("\r\n", $headers),
-            'method' => 'POST',
-        ]
-    ];
-
-    $context = stream_context_create($options);
-    $response = file_get_contents($url, false, $context);
-
-    if ($response === false) {
-        die("Error al obtener device_id.");
-    }
-
-    return trim($response, '"'); // Limpiar comillas en la respuesta
+    return hacer_peticion_curl($url, $headers, null, 'POST');
 }
 
 // Obtener el token de 10 días
@@ -117,26 +94,37 @@ function get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id) {
         'X-Movistarplus-Deviceid: ' . $device_id,
     ];
 
-    $options = [
-        'http' => [
-            'header' => implode("\r\n", $headers),
-            'method' => 'POST',
-            'content' => $data,
-        ]
-    ];
-
-    $context = stream_context_create($options);
-    $response = file_get_contents($url, false, $context);
-
-    if ($response === false) {
-        die("Error al obtener el token de 10 días.");
-    }
-
-    $response_data = json_decode($response, true);
-    return $response_data['accessToken'] ?? null;
+    return json_decode(hacer_peticion_curl($url, $headers, $data, 'POST'), true)['accessToken'];
 }
 
-// Obtener el device_id y el nuevo token
+// Procesar la lista M3U
+$url_epg = "https://ottcache.dof6.com/movistarplus/webplayer/DIFUSION/contents/epg";
+$epg_data = json_decode(hacer_peticion_curl($url_epg, []), true);
+
+// Crear la lista M3U con el token de 24 horas
+$extracted_data = ['#EXTM3U url-tvg="https://raw.githubusercontent.com/dracohe/CARLOS/master/guide_IPTV.xml,https://raw.githubusercontent.com/davidmuma/EPG_dobleM/master/guiatv_sincolor.xml.gz"'];
+foreach ($epg_data as $entry) {
+    $nombre = $entry['Nombre'] ?? '';
+    $Cas_Id = $entry['CasId'] ?? '';
+    $mpd = $entry['PuntoReproduccion'] ?? '';
+    $logo = $entry['Logo'] ?? '';
+    $clave = $Cas_Id_claves[$Cas_Id] ?? '';
+
+    $line1 = "#EXTINF:-1 tvg-logo=\"$logo\" group-title=\"MOVISTAR +\",$nombre";
+    $line2 = '#KODIPROP:inputstreamaddon=inputstream.adaptive';
+    $line3 = '#KODIPROP:inputstream.adaptive.manifest_type=mpd';
+    $line4 = '#KODIPROP:inputstream.adaptive.license_type=clearkey';
+    $line5 = "#KODIPROP:inputstream.adaptive.license_key=$clave";
+    $line6 = $mpd;
+
+    $extracted_data[] = implode("\n", [$line1, $line2, $line3, $line4, $line5, $line6]);
+}
+
+// Guardar la lista M3U generada en el archivo de salida
+file_put_contents($ARCHIVO_SALIDA, implode("\n\n", $extracted_data));
+echo "Información extraída y guardada en $ARCHIVO_SALIDA\n";
+
+// Obtener el `device_id` y el nuevo token
 $device_id = get_devices($id_user, $AUTHORIZATION_BEARER);
 $ten_days_token = get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id);
 
@@ -145,32 +133,7 @@ if ($ten_days_token) {
     file_put_contents('AUTHORIZATION_BEARER.ini', $ten_days_token);
 }
 
-// Procesar la línea para OTT Navigator con el token de 24 horas
-$parsed_url = parse_url($ARCHIVO_ORIGEN_O_URL);
-$my_token = ''; // Asume que ya tienes el token de 24 horas obtenido
-
-if ($parsed_url['scheme'] ?? false) {
-    $nombre_archivo_leer = basename($parsed_url['path']);
-} else {
-    $nombre_archivo_leer = $ARCHIVO_ORIGEN_O_URL;
-}
-
-$lines = file($nombre_archivo_leer, FILE_IGNORE_NEW_LINES);
-$nuevas_lineas = [];
-
-$nueva_linea = "#KODIPROP:inputstream.adaptive.stream_headers=X-TCDN-token=$my_token\n";
-
-foreach ($lines as $line) {
-    if (strpos($line, 'http') === 0) {
-        $nuevas_lineas[] = $nueva_linea;
-    }
-    $nuevas_lineas[] = $line;
-}
-
-file_put_contents($ARCHIVO_SALIDA, implode("\n", $nuevas_lineas));
-echo "Creado archivo final '$ARCHIVO_SALIDA' con el token de 24 horas.\n";
-
-// Subida del archivo resultante a Dropbox
+// Subir el archivo resultante a Dropbox
 require 'vendor/autoload.php';  // Cargar el SDK de Dropbox
 
 function subir_archivo_dropbox($archivo_salida) {
