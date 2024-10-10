@@ -8,7 +8,8 @@ $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";
 $APP_SECRET_DROPBOX = "629f1z2kzqmpqit";
 $REFRESH_TOKEN_DROPBOX = "0VakNqGAM6QAAAAAAAAAAaed3z_RGR57MDxB6iiwhDXt9VqEIP5BvSgwrHO2m9w4";
 $ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";
-$DROPBOX_API_URL = "https://content.dropboxapi.com/2/files/upload";
+$DROPBOX_API_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
+$DROPBOX_API_TOKEN_URL = "https://api.dropbox.com/oauth2/token";
 
 // Crear el informe base
 file_put_contents($ARCHIVO_PROCESO_FINALIZADO, "Proceso en ejecución...\n");
@@ -51,12 +52,48 @@ $new_content = implode("\n\n", $extracted_data);
 file_put_contents($ARCHIVO_SALIDA, $new_content);
 echo "Información extraída y guardada en $ARCHIVO_SALIDA\n";
 
-// Subir archivo a Dropbox utilizando curl
-function subir_archivo_dropbox($archivo_salida) {
-    global $REFRESH_TOKEN_DROPBOX, $DROPBOX_API_URL;
+// Función para obtener Access Token desde Refresh Token
+function obtener_access_token_dropbox() {
+    global $APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX, $DROPBOX_API_TOKEN_URL;
 
     $headers = [
-        "Authorization: Bearer $REFRESH_TOKEN_DROPBOX",
+        'Content-Type: application/x-www-form-urlencoded'
+    ];
+
+    $data = http_build_query([
+        'grant_type' => 'refresh_token',
+        'refresh_token' => $REFRESH_TOKEN_DROPBOX,
+        'client_id' => $APP_KEY_DROPBOX,
+        'client_secret' => $APP_SECRET_DROPBOX
+    ]);
+
+    $curl = curl_init($DROPBOX_API_TOKEN_URL);
+    curl_setopt($curl, CURLOPT_POST, true);
+    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($curl);
+    if (curl_errno($curl)) {
+        die("Error al obtener Access Token: " . curl_error($curl));
+    }
+    curl_close($curl);
+
+    $result = json_decode($response, true);
+    return $result['access_token'] ?? null;
+}
+
+// Subir archivo a Dropbox utilizando curl
+function subir_archivo_dropbox($archivo_salida) {
+    global $DROPBOX_API_UPLOAD_URL;
+
+    $access_token = obtener_access_token_dropbox();
+    if (!$access_token) {
+        die("Error al obtener Access Token para Dropbox.");
+    }
+
+    $headers = [
+        "Authorization: Bearer $access_token",
         "Content-Type: application/octet-stream",
         "Dropbox-API-Arg: " . json_encode([
             "path" => "/" . basename($archivo_salida),
@@ -71,7 +108,7 @@ function subir_archivo_dropbox($archivo_salida) {
         die("Error leyendo el contenido del archivo.");
     }
 
-    $curl = curl_init($DROPBOX_API_URL);
+    $curl = curl_init($DROPBOX_API_UPLOAD_URL);
     curl_setopt($curl, CURLOPT_POST, true);
     curl_setopt($curl, CURLOPT_POSTFIELDS, $file_content);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
