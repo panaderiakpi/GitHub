@@ -105,6 +105,55 @@ function procesar_m3u($url_m3u, $archivo_salida, $token_diario) {
     echo "Archivo procesado y guardado como '$archivo_salida'.\n";
 }
 
+// Función para crear enlace compartido en Dropbox si no existe
+function crear_enlace_compartido_dropbox($access_token, $ruta_archivo) {
+    $dropbox_api_share = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings";
+    $headers_share = [
+        "Authorization: Bearer $access_token",
+        "Content-Type: application/json"
+    ];
+    $data_share = json_encode(["path" => $ruta_archivo, "settings" => ["requested_visibility" => "public"]]);
+
+    $curl_share = curl_init($dropbox_api_share);
+    curl_setopt($curl_share, CURLOPT_POST, true);
+    curl_setopt($curl_share, CURLOPT_HTTPHEADER, $headers_share);
+    curl_setopt($curl_share, CURLOPT_POSTFIELDS, $data_share);
+    curl_setopt($curl_share, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($curl_share, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); // Forzar HTTP 1.1
+
+    $response_share = curl_exec($curl_share);
+    $http_status_share = curl_getinfo($curl_share, CURLINFO_HTTP_CODE);
+
+    if ($http_status_share == 409) {
+        // El enlace ya existe, obtén el enlace existente
+        $dropbox_api_get_link = "https://api.dropboxapi.com/2/sharing/list_shared_links";
+        $data_get_link = json_encode(["path" => $ruta_archivo]);
+
+        $curl_get_link = curl_init($dropbox_api_get_link);
+        curl_setopt($curl_get_link, CURLOPT_POST, true);
+        curl_setopt($curl_get_link, CURLOPT_HTTPHEADER, $headers_share);
+        curl_setopt($curl_get_link, CURLOPT_POSTFIELDS, $data_get_link);
+        curl_setopt($curl_get_link, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl_get_link, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
+        $response_get_link = curl_exec($curl_get_link);
+        $link_data = json_decode($response_get_link, true);
+        curl_close($curl_get_link);
+
+        // Si ya existe un enlace compartido, usamos el primero
+        if (isset($link_data['links'][0]['url'])) {
+            return $link_data['links'][0]['url'];
+        }
+    }
+
+    if ($http_status_share != 200 && $http_status_share != 409) {
+        die("Error: Código HTTP $http_status_share al crear o obtener enlace compartido.");
+    }
+
+    curl_close($curl_share);
+    return json_decode($response_share, true)['url'];
+}
+
 // Función para subir el archivo a Dropbox
 function subir_archivo_dropbox($archivo_local) {
     $access_token = obtener_access_token_dropbox();
@@ -148,35 +197,11 @@ function subir_archivo_dropbox($archivo_local) {
 
     curl_close($curl);
 
-    // Generar enlace compartido
-    $dropbox_api_share = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings";
-    $headers_share = [
-        "Authorization: Bearer $access_token",
-        "Content-Type: application/json"
-    ];
-    $data_share = json_encode(["path" => "/" . basename($archivo_local), "settings" => ["requested_visibility" => "public"]]);
+    // Crear enlace compartido o recuperar el existente
+    $ruta_archivo = "/" . basename($archivo_local);
+    $shared_link = crear_enlace_compartido_dropbox($access_token, $ruta_archivo);
 
-    $curl_share = curl_init($dropbox_api_share);
-    curl_setopt($curl_share, CURLOPT_POST, true);
-    curl_setopt($curl_share, CURLOPT_HTTPHEADER, $headers_share);
-    curl_setopt($curl_share, CURLOPT_POSTFIELDS, $data_share);
-    curl_setopt($curl_share, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl_share, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); // Forzar HTTP 1.1
-
-    $response_share = curl_exec($curl_share);
-    if (curl_errno($curl_share)) {
-        die("Error al crear enlace compartido en Dropbox: " . curl_error($curl_share));
-    }
-
-    $http_status_share = curl_getinfo($curl_share, CURLINFO_HTTP_CODE);
-    if ($http_status_share != 200) {
-        die("Error: Código HTTP $http_status_share al crear enlace compartido.");
-    }
-
-    $link_data = json_decode($response_share, true);
-    curl_close($curl_share);
-
-    $shared_link = $link_data['url'];
+    // Modificar enlace para descarga directa
     $direct_link = str_replace("?dl=0", "?dl=1", $shared_link);
     echo "Archivo subido correctamente a Dropbox. Enlace de descarga directa: $direct_link\n";
 }
