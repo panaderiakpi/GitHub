@@ -3,10 +3,10 @@
 // Cargar datos necesarios
 $AUTHORIZATION_BEARER = file_get_contents('AUTHORIZATION_BEARER.ini'); // Authorization bearer de M+
 $ARCHIVO_ORIGEN_O_URL = "Movistar_base.m3u";  // Archivo .m3u de origen
-$ARCHIVO_SALIDA = "gitbtf.m3u";  // Nombre del archivo .m3u final
-$APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";  // API App key Dropbox (OPCIONAL)
-$APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // API App secret Dropbox (OPCIONAL)
-$REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // API refresh token Dropbox (OPCIONAL)
+$ARCHIVO_SALIDA = "btf.m3u";  // Nombre del archivo .m3u final
+$APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";  // API App key Dropbox
+$APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // API App secret Dropbox
+$REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // API refresh token Dropbox
 $DIAS_SIN_REFRESCO = 7;
 $MENSAJE_TERMUX = "Algo fue mal en el proceso, sin plus en el salón";
 $ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";
@@ -215,24 +215,47 @@ if (!empty($ARCHIVO_SALIDA)) {
     exit;
 }
 
-// Subir el archivo a Dropbox si está configurado
-if (!empty($APP_KEY_DROPBOX) && !empty($APP_SECRET_DROPBOX) && !empty($REFRESH_TOKEN_DROPBOX)) {
-    require_once 'dropbox-sdk/Dropbox/autoload.php'; // Asegúrate de que la SDK de Dropbox esté disponible
+// Subir el archivo a Dropbox usando la API de Dropbox directamente (sin SDK)
+function subir_archivo_a_dropbox($archivo_salida, $access_token) {
+    $dropbox_url = 'https://content.dropboxapi.com/2/files/upload';
+    $dropbox_args = json_encode([
+        "path" => "/" . $archivo_salida,
+        "mode" => "overwrite",
+        "autorename" => true
+    ]);
 
-    use Dropbox\Client;
-    use Dropbox\WriteMode;
+    $fp = fopen($archivo_salida, 'rb');
+    $size = filesize($archivo_salida);
 
-    function subir_archivo_a_dropbox($archivo_salida, $app_key, $app_secret, $refresh_token) {
-        $client = new Dropbox\Client("Bearer {$refresh_token}", $app_key);
-        $file = fopen($archivo_salida, "rb");
-        $client->uploadFile("/{$archivo_salida}", Dropbox\WriteMode::overwrite(), $file);
-        fclose($file);
+    $headers = [
+        'Authorization: Bearer ' . $access_token,
+        'Content-Type: application/octet-stream',
+        'Dropbox-API-Arg: ' . $dropbox_args,
+    ];
 
-        $shared_link = $client->createShareableLink("/{$archivo_salida}");
-        return str_replace("dl=0", "dl=1", $shared_link);
+    $ch = curl_init($dropbox_url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_PUT, true);
+    curl_setopt($ch, CURLOPT_INFILE, $fp);
+    curl_setopt($ch, CURLOPT_INFILESIZE, $size);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    fclose($fp);
+
+    if ($response === false) {
+        echo "Error al subir el archivo a Dropbox.";
+    } else {
+        // Crear un enlace compartido
+        $response_data = json_decode($response, true);
+        return $response_data;
     }
+}
 
-    $url_compartir = subir_archivo_a_dropbox($ARCHIVO_SALIDA, $APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX);
+$access_token = $REFRESH_TOKEN_DROPBOX; // Usa el refresh token para acceder a la API de Dropbox
+$url_compartir = subir_archivo_a_dropbox($ARCHIVO_SALIDA, $access_token);
+
+if ($url_compartir) {
     echo "Archivo final subido a Dropbox con enlace directo: {$url_compartir}";
 }
 
