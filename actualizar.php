@@ -106,6 +106,10 @@ function get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id) {
 
     $headers = [
         'Accept: application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'es-ES,es;q=0.9',
+        'Origin': 'https://ver.movistarplus.es',
+        'Referer': 'https://ver.movistarplus.es/',
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0',
         'Content-Type: application/json',
         'X-Movistarplus-Deviceid: ' . $device_id,
         'Authorization: Bearer ' . $AUTHORIZATION_BEARER,
