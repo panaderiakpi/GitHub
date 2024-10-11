@@ -1,5 +1,13 @@
 <?php
-// Función para cargar el archivo AUTHORIZATION_BEARER.ini
+// Datos necesarios
+$APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";  // API App key Dropbox
+$APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // API App secret Dropbox
+$REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // API refresh token Dropbox
+$ARCHIVO_ORIGEN_O_URL = "https://ottcache.dof6.com/movistarplus/webplayer/DIFUSION/contents/epg";  // URL del archivo M3U
+$ARCHIVO_SALIDA = "btf.m3u";  // Archivo de salida
+$ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";  // Archivo para el proceso finalizado
+
+// Función para cargar el token AUTHORIZATION_BEARER
 function cargar_autorizacion_bearer($archivo) {
     if (!file_exists($archivo)) {
         die("Error: El archivo $archivo no existe.");
@@ -7,7 +15,36 @@ function cargar_autorizacion_bearer($archivo) {
     return trim(file_get_contents($archivo));
 }
 
-// Función para realizar la solicitud POST con curl
+// Función para obtener Access Token desde Refresh Token de Dropbox
+function obtener_access_token_dropbox() {
+    global $APP_KEY_DROPBOX, $APP_SECRET_DROPBOX, $REFRESH_TOKEN_DROPBOX;
+
+    $url_token = "https://api.dropbox.com/oauth2/token";
+    $headers = ['Content-Type: application/x-www-form-urlencoded'];
+    $data = http_build_query([
+        'grant_type' => 'refresh_token',
+        'refresh_token' => $REFRESH_TOKEN_DROPBOX,
+        'client_id' => $APP_KEY_DROPBOX,
+        'client_secret' => $APP_SECRET_DROPBOX
+    ]);
+
+    $curl = curl_init($url_token);
+    curl_setopt($curl, CURLOPT_POST, true);
+    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($curl);
+    if (curl_errno($curl)) {
+        die("Error al obtener Access Token: " . curl_error($curl));
+    }
+    curl_close($curl);
+
+    $result = json_decode($response, true);
+    return $result['access_token'] ?? null;
+}
+
+// Función para realizar la solicitud POST
 function hacer_peticion_post($url, $datos, $token) {
     $headers = [
         "Authorization: Bearer $token",
@@ -21,7 +58,6 @@ function hacer_peticion_post($url, $datos, $token) {
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); // Forzar HTTP 1.1
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); // Desactivar verificación SSL para pruebas
 
     $respuesta = curl_exec($curl);
     if (curl_errno($curl)) {
@@ -37,7 +73,7 @@ function hacer_peticion_post($url, $datos, $token) {
     return json_decode($respuesta, true);
 }
 
-// Función para obtener el token de 24 horas de M+
+// Función para obtener el token diario de 24 horas de M+
 function obtener_token_diario($authorization_bearer) {
     $url_token = "https://idserver.dof6.com/00QSp000006KYmsMAG-L/devices/webplayer/cdn/token/refresh";
     $datos = [];  // Cuerpo vacío en formato JSON
@@ -70,10 +106,15 @@ function procesar_m3u($url_m3u, $archivo_salida, $token_diario) {
 }
 
 // Función para subir el archivo a Dropbox
-function subir_archivo_dropbox($archivo_local, $dropbox_token) {
+function subir_archivo_dropbox($archivo_local) {
+    $access_token = obtener_access_token_dropbox();
+    if (!$access_token) {
+        die("Error al obtener Access Token para Dropbox.");
+    }
+
     $dropbox_url = "https://content.dropboxapi.com/2/files/upload";
     $headers = [
-        "Authorization: Bearer $dropbox_token",
+        "Authorization: Bearer $access_token",
         "Content-Type: application/octet-stream",
         "Dropbox-API-Arg: " . json_encode([
             "path" => "/" . basename($archivo_local),
@@ -110,7 +151,7 @@ function subir_archivo_dropbox($archivo_local, $dropbox_token) {
     // Generar enlace compartido
     $dropbox_api_share = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings";
     $headers_share = [
-        "Authorization: Bearer $dropbox_token",
+        "Authorization: Bearer $access_token",
         "Content-Type: application/json"
     ];
     $data_share = json_encode(["path" => "/" . basename($archivo_local), "settings" => ["requested_visibility" => "public"]]);
@@ -142,9 +183,6 @@ function subir_archivo_dropbox($archivo_local, $dropbox_token) {
 
 // Script principal
 $AUTHORIZATION_BEARER = cargar_autorizacion_bearer('AUTHORIZATION_BEARER.ini');
-$ARCHIVO_ORIGEN_O_URL = "https://ottcache.dof6.com/movistarplus/webplayer/DIFUSION/contents/epg"; // URL del archivo M3U
-$ARCHIVO_SALIDA = "gitbtf.m3u";  // Archivo de salida
-$DROPBOX_ACCESS_TOKEN = '2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9';  // Reemplaza con tu token de acceso
 
 // Obtener el token diario de 24 horas
 $token_diario_data = obtener_token_diario($AUTHORIZATION_BEARER);
@@ -154,6 +192,8 @@ $token_diario = $token_diario_data['access_token'] ?? die("Error al obtener el t
 procesar_m3u($ARCHIVO_ORIGEN_O_URL, $ARCHIVO_SALIDA, $token_diario);
 
 // Subir archivo a Dropbox
-subir_archivo_dropbox($ARCHIVO_SALIDA, $DROPBOX_ACCESS_TOKEN);
+subir_archivo_dropbox($ARCHIVO_SALIDA);
 
+// Guardar informe del proceso
+file_put_contents($ARCHIVO_PROCESO_FINALIZADO, "PROCEDIMIENTO FINALIZADO CON ÉXITO. ¡PAZ Y AMOR, Y EL PLUS PAL SALÓN!\n");
 ?>
