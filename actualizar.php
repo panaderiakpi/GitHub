@@ -143,7 +143,7 @@ function subir_archivo_dropbox($archivo_local, $dropbox_token) {
 // Script principal
 $AUTHORIZATION_BEARER = cargar_autorizacion_bearer('AUTHORIZATION_BEARER.ini');
 $ARCHIVO_ORIGEN_O_URL = "https://ottcache.dof6.com/movistarplus/webplayer/DIFUSION/contents/epg"; // URL del archivo M3U
-$ARCHIVO_SALIDA = "btf.m3u";  // Archivo de salida
+$ARCHIVO_SALIDA = "gitbtf.m3u";  // Archivo de salida
 $DROPBOX_ACCESS_TOKEN = '2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9';  // Reemplaza con tu token de acceso
 
 // Obtener el token diario de 24 horas
