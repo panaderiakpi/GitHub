@@ -4,7 +4,7 @@ $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";  // API App key Dropbox
 $APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // API App secret Dropbox
 $REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // API refresh token Dropbox
 $ARCHIVO_ORIGEN_O_URL = "https://ottcache.dof6.com/movistarplus/webplayer/DIFUSION/contents/epg";  // URL del archivo M3U
-$ARCHIVO_SALIDA = "btf.m3u";  // Archivo de salida
+$ARCHIVO_SALIDA = "gitbtf.m3u";  // Archivo de salida
 $ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";  // Archivo para el proceso finalizado
 
 // Función para cargar el token AUTHORIZATION_BEARER
