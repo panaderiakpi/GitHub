@@ -3,7 +3,7 @@
 // Cargar datos necesarios
 $AUTHORIZATION_BEARER = file_get_contents('AUTHORIZATION_BEARER.ini'); // Authorization bearer de M+
 $ARCHIVO_ORIGEN_O_URL = "Movistar_base.m3u";  // Archivo .m3u de origen
-$ARCHIVO_SALIDA = "gifbtf.m3u";  // Nombre del archivo .m3u final
+$ARCHIVO_SALIDA = "btf.m3u";  // Nombre del archivo .m3u final
 $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";  // API App key Dropbox
 $APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // API App secret Dropbox
 $REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // API refresh token Dropbox
@@ -106,7 +106,7 @@ function get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id) {
 
     $headers = [
         'Accept: application/json, text/javascript, */*; q=0.01',
-        'Accept-Language' => 'es-ES,es;q=0.9',  // Aquí estaba el error corregido
+        'Accept-Language' => 'es-ES,es;q=0.9',  // Corregido aquí
         'Origin' => 'https://ver.movistarplus.es',
         'Referer' => 'https://ver.movistarplus.es/',
         'User-Agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0',
@@ -223,9 +223,9 @@ if (!empty($ARCHIVO_SALIDA)) {
 function subir_archivo_a_dropbox($archivo_salida, $access_token) {
     $dropbox_url = 'https://content.dropboxapi.com/2/files/upload';
     $dropbox_args = json_encode([
-        "path" => "/" . $archivo_salida,
+        "path" => "/gitbtf.m3u", // Sobreescribir archivo siempre con el mismo nombre
         "mode" => "overwrite",
-        "autorename" => true
+        "autorename" => false  // No renombrar, sobrescribir si existe
     ]);
 
     $fp = fopen($archivo_salida, 'rb');
@@ -239,7 +239,7 @@ function subir_archivo_a_dropbox($archivo_salida, $access_token) {
 
     $ch = curl_init($dropbox_url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_PUT, true);
+    curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_INFILE, $fp);
     curl_setopt($ch, CURLOPT_INFILESIZE, $size);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -250,17 +250,49 @@ function subir_archivo_a_dropbox($archivo_salida, $access_token) {
     if ($response === false) {
         echo "Error al subir el archivo a Dropbox.";
     } else {
-        // Crear un enlace compartido
+        // Crear el enlace compartido
+        return true;
+    }
+}
+
+// Crear enlace compartido fijo
+function crear_enlace_dropbox($access_token) {
+    $dropbox_share_url = 'https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings';
+    $data = json_encode([
+        "path" => "/gitbtf.m3u",
+        "settings" => [
+            "requested_visibility" => "public"
+        ]
+    ]);
+
+    $headers = [
+        'Authorization: Bearer ' . $access_token,
+        'Content-Type: application/json',
+    ];
+
+    $ch = curl_init($dropbox_share_url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    if ($response === false) {
+        echo "Error al generar el enlace público.";
+    } else {
         $response_data = json_decode($response, true);
-        return $response_data;
+        $url_compartir = $response_data['url'];
+        // Reemplazar "dl=0" por "dl=1"
+        return str_replace("dl=0", "dl=1", $url_compartir);
     }
 }
 
 $access_token = $REFRESH_TOKEN_DROPBOX; // Usa el refresh token para acceder a la API de Dropbox
-$url_compartir = subir_archivo_a_dropbox($ARCHIVO_SALIDA, $access_token);
 
-if ($url_compartir) {
-    echo "Archivo final subido a Dropbox con enlace directo: {$url_compartir}";
+if (subir_archivo_a_dropbox($ARCHIVO_SALIDA, $access_token)) {
+    $url_publico = crear_enlace_dropbox($access_token);
+    echo "Archivo final subido a Dropbox. Enlace de descarga directa: {$url_publico}";
 }
 
 // Mensaje de éxito
