@@ -106,13 +106,13 @@ function get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id) {
 
     $headers = [
         'Accept: application/json, text/javascript, */*; q=0.01',
-        'Accept-Language': 'es-ES,es;q=0.9',
-        'Origin': 'https://ver.movistarplus.es',
-        'Referer': 'https://ver.movistarplus.es/',
-        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0',
-        'Content-Type: application/json',
-        'X-Movistarplus-Deviceid: ' . $device_id,
-        'Authorization: Bearer ' . $AUTHORIZATION_BEARER,
+        'Accept-Language' => 'es-ES,es;q=0.9',  // Aquí estaba el error corregido
+        'Origin' => 'https://ver.movistarplus.es',
+        'Referer' => 'https://ver.movistarplus.es/',
+        'User-Agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0',
+        'Content-Type' => 'application/json',
+        'X-Movistarplus-Deviceid' => $device_id,
+        'Authorization' => 'Bearer ' . $AUTHORIZATION_BEARER,
     ];
 
     $url = "https://clientservices.dof6.com/movistarplus/webplayer/sdp/mediaPlayers/{$device_id}/initData?qspVersion=ssp&version=8&status=default";
@@ -234,7 +234,7 @@ function subir_archivo_a_dropbox($archivo_salida, $access_token) {
     $headers = [
         'Authorization: Bearer ' . $access_token,
         'Content-Type: application/octet-stream',
-        'Dropbox-API-Arg: ' . $dropbox_args,
+        'Dropbox-API-Arg' => $dropbox_args,
     ];
 
     $ch = curl_init($dropbox_url);
