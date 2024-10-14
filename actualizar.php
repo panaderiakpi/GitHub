@@ -17,7 +17,7 @@ file_put_contents($ARCHIVO_PROCESO_FINALIZADO, $MENSAJE_TERMUX);
 // Cargar el archivo INI de Cas_Id_claves
 $Cas_Id_claves = parse_ini_file('Cas_Id_claves.ini', true)['Cas_Id_claves'];
 
-// Obtener datos del endpoint
+// Obtener datos del endpoint EPG
 $url = "https://ottcache.dof6.com/movistarplus/webplayer/DIFUSION/contents/epg";
 $response = file_get_contents($url);
 
@@ -63,6 +63,10 @@ if ($response !== false) {
 // Decodificación del JWT del bearer token
 function decode_jwt($token) {
     $parts = explode(".", $token);
+    if (count($parts) < 3) {
+        echo "Error: Token JWT mal formado.";
+        exit;
+    }
     return json_decode(base64_decode($parts[1]), true);
 }
 
@@ -71,7 +75,13 @@ $id_dispositivo = isset($jwt_data['deviceId']) ? $jwt_data['deviceId'] : "NO EXI
 $id_user = isset($jwt_data['accountNumber']) ? $jwt_data['accountNumber'] : "NO EXISTE";
 $segmento_cliente = isset($jwt_data['clientSegment']) ? $jwt_data['clientSegment'] : "NO EXISTE";
 $sptoken = isset($jwt_data['sptoken']) ? $jwt_data['sptoken'] : "NO EXISTE";
-$validez_token = DateTime::createFromFormat('U', $jwt_data['exp']);
+$validez_token = isset($jwt_data['exp']) ? DateTime::createFromFormat('U', $jwt_data['exp']) : null;
+
+// Validar si los datos decodificados son válidos
+if ($id_user === "NO EXISTE" || $id_dispositivo === "NO EXISTE" || !$validez_token) {
+    echo "Error: No se pudieron obtener datos válidos del token JWT. Verifica el AUTHORIZATION_BEARER.";
+    exit;
+}
 
 echo "Código de cliente de M+ '{$id_user}' decodificado (segmento de cliente: {$segmento_cliente} sptoken: {$sptoken} e ID de dispositivo: {$id_dispositivo}).";
 echo "Authorization bearer de M+ válido hasta: " . $validez_token->format('d/m/Y-H:i:s') . ".";
@@ -89,7 +99,13 @@ function get_devices($id_user, $AUTHORIZATION_BEARER) {
     $url = "https://auth.dof6.com/movistarplus/webplayer/accounts/{$id_user}/devices/?qspVersion=ssp";
     $opts = ['http' => ['method' => 'POST', 'header' => implode("\r\n", $headers)]];
     $context = stream_context_create($opts);
-    return trim(file_get_contents($url, false, $context), '"');
+    
+    $response = file_get_contents($url, false, $context);
+    if ($response === false) {
+        echo "Error: No se pudo obtener el device ID. Verifica el AUTHORIZATION_BEARER o el ID del usuario.";
+        exit;
+    }
+    return trim($response, '"');
 }
 
 // Función para obtener el token de 10 días
@@ -106,7 +122,7 @@ function get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id) {
 
     $headers = [
         'Accept: application/json, text/javascript, */*; q=0.01',
-        'Accept-Language' => 'es-ES,es;q=0.9',  // Corregido aquí
+        'Accept-Language' => 'es-ES,es;q=0.9',
         'Origin' => 'https://ver.movistarplus.es',
         'Referer' => 'https://ver.movistarplus.es/',
         'User-Agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0',
@@ -124,9 +140,24 @@ function get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id) {
         ]
     ];
     $context = stream_context_create($opts);
-    return json_decode(file_get_contents($url, false, $context), true)['accessToken'];
+
+    $response = file_get_contents($url, false, $context);
+    if ($response === false) {
+        echo "Error: No se pudo obtener el token de 10 días. Verifica el ID del usuario o el token.";
+        exit;
+    }
+    $response_data = json_decode($response, true);
+    
+    // Verificar si se obtuvo el token correctamente
+    if (!isset($response_data['accessToken'])) {
+        echo "Error: No se recibió un token de 10 días válido.";
+        exit;
+    }
+
+    return $response_data['accessToken'];
 }
 
+// Validar la renovación del token si es necesario
 if ($fecha_actual >= $validez_token->modify('-' . (10 - $DIAS_SIN_REFRESCO) . ' days')) {
     $device_id = get_devices($id_user, $AUTHORIZATION_BEARER);
     $ten_days_token = get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id);
@@ -137,38 +168,7 @@ if ($fecha_actual >= $validez_token->modify('-' . (10 - $DIAS_SIN_REFRESCO) . ' 
     echo "Nuevo authorization bearer de 10 días de M+: {$ten_days_token}";
     echo "ID de dispositivo parseado: {$device_id}";
 } else {
-    echo "No es necesario renovar el token";
-}
-
-// Petición para obtener el token de 24 horas
-function hacer_peticion_post($url, $datos, $token) {
-    $headers = [
-        'Authorization: Bearer ' . $token,
-        'Content-Type: application/json'
-    ];
-
-    $opts = [
-        'http' => [
-            'method' => 'POST',
-            'header' => implode("\r\n", $headers),
-            'content' => json_encode($datos)
-        ]
-    ];
-
-    $context = stream_context_create($opts);
-    $result = file_get_contents($url, false, $context);
-    return json_decode($result, true);
-}
-
-$url_api = "https://idserver.dof6.com/{$id_user}/devices/webplayer/cdn/token/refresh";
-$datos_a_enviar = ['clave1' => 'valor1', 'clave2' => 'valor2'];
-$resultado = hacer_peticion_post($url_api, $datos_a_enviar, $AUTHORIZATION_BEARER);
-
-if ($resultado) {
-    $my_token = $resultado['access_token'];
-    echo "Token de 24 horas de M+: '{$my_token}' generado.";
-} else {
-    echo "La solicitud del token de 24 horas de M+ falló.";
+    echo "No es necesario renovar el token.";
 }
 
 // Procesar archivo origen o URL
@@ -200,7 +200,7 @@ if (isset($parsed_url['scheme']) && isset($parsed_url['host'])) {
 
 // Procesar el contenido del archivo .m3u
 $lines = file($nombre_archivo_leer, FILE_IGNORE_NEW_LINES);
-$nueva_linea = "#KODIPROP:inputstream.adaptive.stream_headers=X-TCDN-token={$my_token}\n";
+$nueva_linea = "#KODIPROP:inputstream.adaptive.stream_headers=X-TCDN-token={$ten_days_token}\n";
 $nuevas_lineas = [];
 
 foreach ($lines as $line) {
@@ -249,8 +249,8 @@ function subir_archivo_a_dropbox($archivo_salida, $access_token) {
 
     if ($response === false) {
         echo "Error al subir el archivo a Dropbox.";
+        exit;
     } else {
-        // Crear el enlace compartido
         return true;
     }
 }
@@ -280,6 +280,7 @@ function crear_enlace_dropbox($access_token) {
 
     if ($response === false) {
         echo "Error al generar el enlace público.";
+        exit;
     } else {
         $response_data = json_decode($response, true);
         $url_compartir = $response_data['url'];
