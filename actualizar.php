@@ -42,7 +42,9 @@ if ($fecha_actual >= $validez_token->modify('-' . (10 - $DIAS_SIN_REFRESCO) . ' 
     function get_devices($id_user, $AUTHORIZATION_BEARER) {
         $headers = [
             'Authorization: Bearer ' . $AUTHORIZATION_BEARER,
-            'User-Agent: Mozilla/5.0'
+            'Accept' => 'application/json, text/javascript, */*; q=0.01',
+            'Accept-Language' => 'es-ES,es;q=0.9',
+            'User-Agent' => 'Mozilla/5.0'
         ];
 
         $url = "https://auth.dof6.com/movistarplus/webplayer/accounts/{$id_user}/devices/?qspVersion=ssp";
@@ -60,6 +62,8 @@ if ($fecha_actual >= $validez_token->modify('-' . (10 - $DIAS_SIN_REFRESCO) . ' 
     function get_ten_days_token($id_user, $AUTHORIZATION_BEARER, $device_id) {
         $data = [
             'accountNumber' => $id_user,
+            'userProfile' => '0',
+            'streamMiscellanea' => 'HTTPS',
             'deviceType' => 'WP_OTT',
             'deviceManufacturerProduct' => 'Firefox',
             'streamDRM' => 'Widevine',
@@ -68,7 +72,10 @@ if ($fecha_actual >= $validez_token->modify('-' . (10 - $DIAS_SIN_REFRESCO) . ' 
 
         $headers = [
             'Authorization: Bearer ' . $AUTHORIZATION_BEARER,
-            'Content-Type: application/json'
+            'Content-Type' => 'application/json',
+            'User-Agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0',
+            'Origin' => 'https://ver.movistarplus.es',
+            'Referer' => 'https://ver.movistarplus.es/'
         ];
 
         $url = "https://clientservices.dof6.com/movistarplus/webplayer/sdp/mediaPlayers/{$device_id}/initData?qspVersion=ssp";
@@ -132,7 +139,7 @@ function subir_archivo_a_dropbox($archivo_salida, $access_token) {
 
     $headers = [
         'Authorization: Bearer ' . $access_token,
-        'Content-Type: application/octet-stream',
+        'Content-Type' => 'application/octet-stream',
         'Dropbox-API-Arg' => $dropbox_args,
     ];
 
@@ -158,7 +165,7 @@ function crear_enlace_dropbox($access_token) {
 
     $headers = [
         'Authorization: Bearer ' . $access_token,
-        'Content-Type: application/json'
+        'Content-Type' => 'application/json'
     ];
 
     $ch = curl_init($dropbox_share_url);
