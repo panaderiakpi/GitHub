@@ -9,6 +9,7 @@ $APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // API App secret Dropbox
 $REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // Refresh token Dropbox
 $DIAS_SIN_REFRESCO = 7;
 $ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";
+$DROPBOX_FILE_PATH = "/gifbtf.m3u";  // Ruta del archivo en Dropbox
 
 // Decodificar JWT
 function decode_jwt($token) {
@@ -126,11 +127,36 @@ foreach ($lines as $line) {
 file_put_contents($ARCHIVO_SALIDA, implode("\n", $nuevas_lineas));
 echo "Archivo final '{$ARCHIVO_SALIDA}' generado correctamente.";
 
-// Subir archivo a Dropbox
-function subir_archivo_a_dropbox($archivo_salida, $access_token) {
+// Función para obtener un access token de Dropbox usando el refresh token
+function obtener_access_token_dropbox($refresh_token, $app_key, $app_secret) {
+    $url = "https://api.dropbox.com/oauth2/token";
+    $data = [
+        "grant_type" => "refresh_token",
+        "refresh_token" => $refresh_token,
+        "client_id" => $app_key,
+        "client_secret" => $app_secret
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    if ($response === false) {
+        die("Error al obtener el access token de Dropbox.");
+    }
+
+    $json = json_decode($response, true);
+    return $json['access_token'] ?? null;
+}
+
+// Función para subir el archivo a Dropbox
+function subir_archivo_a_dropbox($archivo_salida, $access_token, $dropbox_file_path) {
     $dropbox_url = 'https://content.dropboxapi.com/2/files/upload';
     $dropbox_args = json_encode([
-        "path" => "/gitbtf.m3u",
+        "path" => $dropbox_file_path,
         "mode" => "overwrite"
     ]);
 
@@ -139,8 +165,8 @@ function subir_archivo_a_dropbox($archivo_salida, $access_token) {
 
     $headers = [
         'Authorization: Bearer ' . $access_token,
-        'Content-Type' => 'application/octet-stream',
-        'Dropbox-API-Arg' => $dropbox_args,
+        'Content-Type: application/octet-stream',
+        'Dropbox-API-Arg: ' . $dropbox_args,
     ];
 
     $ch = curl_init($dropbox_url);
@@ -156,16 +182,17 @@ function subir_archivo_a_dropbox($archivo_salida, $access_token) {
     return $response !== false;
 }
 
-function crear_enlace_dropbox($access_token) {
+// Función para crear o reutilizar un enlace compartido de Dropbox
+function crear_enlace_dropbox($access_token, $dropbox_file_path) {
     $dropbox_share_url = 'https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings';
     $data = json_encode([
-        "path" => "/gitbtf.m3u",
-        "settings" => ["requested_visibility" => "public"]
+        "path" => $dropbox_file_path,
+        "settings" => ["requested_visibility" => "public"],
     ]);
 
     $headers = [
         'Authorization: Bearer ' . $access_token,
-        'Content-Type' => 'application/json'
+        'Content-Type: application/json',
     ];
 
     $ch = curl_init($dropbox_share_url);
@@ -180,10 +207,12 @@ function crear_enlace_dropbox($access_token) {
     return str_replace("dl=0", "dl=1", $response_data['url'] ?? "");
 }
 
-$access_token = $REFRESH_TOKEN_DROPBOX;
+// Obtener access token de Dropbox
+$access_token = obtener_access_token_dropbox($REFRESH_TOKEN_DROPBOX, $APP_KEY_DROPBOX, $APP_SECRET_DROPBOX);
 
-if (subir_archivo_a_dropbox($ARCHIVO_SALIDA, $access_token)) {
-    $url_publico = crear_enlace_dropbox($access_token);
+// Subir archivo a Dropbox y crear enlace
+if (subir_archivo_a_dropbox($ARCHIVO_SALIDA, $access_token, $DROPBOX_FILE_PATH)) {
+    $url_publico = crear_enlace_dropbox($access_token, $DROPBOX_FILE_PATH);
     echo "Archivo subido a Dropbox. Enlace de descarga: {$url_publico}";
 } else {
     echo "Error al subir el archivo a Dropbox.";
