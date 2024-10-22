@@ -101,7 +101,7 @@ if ($fecha_actual >= $validez_token->modify('-' . (10 - $DIAS_SIN_REFRESCO) . ' 
     echo "El token aún es válido.";
 }
 
-// Petición POST para obtener el token de 24 horas
+// Petición POST para obtener el token de 24 horas usando curl
 function obtener_token_24h($id_user, $AUTHORIZATION_BEARER) {
     $headers = [
         'Authorization: Bearer ' . $AUTHORIZATION_BEARER,
@@ -109,11 +109,24 @@ function obtener_token_24h($id_user, $AUTHORIZATION_BEARER) {
     ];
 
     $url = "https://idserver.dof6.com/{$id_user}/devices/webplayer/cdn/token/refresh";
-    $data = ['clave1' => 'valor1', 'clave2' => 'valor2'];  // Datos ejemplo para la solicitud
+    $data = json_encode(['clave1' => 'valor1', 'clave2' => 'valor2']);  // Datos ejemplo para la solicitud
 
-    $response = requests_post($url, $data, $headers);
+    // Inicializar cURL
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+    // Ejecutar la solicitud
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    if ($response === false) {
+        die("Error en la solicitud del token de 24 horas.");
+    }
+
     $response_data = json_decode($response, true);
-
     return $response_data['access_token'] ?? null;
 }
 
