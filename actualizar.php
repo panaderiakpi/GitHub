@@ -204,7 +204,7 @@ function crear_enlace_dropbox($access_token, $dropbox_file_path) {
     curl_close($ch);
 
     $response_data = json_decode($response, true);
-    return str_replace("dl=0", "dl=1", $response_data['url'] ?? "");
+    return str_replace("dl=0", "dl=1", $response_data['url'] );
 }
 
 // Obtener access token de Dropbox
