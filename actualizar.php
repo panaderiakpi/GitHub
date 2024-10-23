@@ -2,7 +2,7 @@
 // Configuración inicial
 $AUTHORIZATION_BEARER = file_get_contents('AUTHORIZATION_BEARER.ini');  // Leer Authorization Bearer
 $ARCHIVO_ORIGEN_O_URL = "Movistar_base.m3u";  // Archivo .m3u de origen
-$ARCHIVO_SALIDA = "gitbtf.m3u";  // Archivo final
+$ARCHIVO_SALIDA = "btf.m3u";  // Archivo final
 $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";  // API App key de Dropbox
 $APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // API App secret de Dropbox
 $REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // Refresh token de Dropbox
@@ -30,13 +30,16 @@ if (!$validez_token) {
 
 echo "Authorization bearer válido hasta: " . $validez_token->format('d/m/Y-H:i:s') . ".";
 
-// Función para obtener el token de 24 horas
+// Función para obtener el token de 24 horas usando HTTP/1.1
 function obtener_token_24h($id_user, $AUTHORIZATION_BEARER) {
     $headers = [
         'Authorization: Bearer ' . $AUTHORIZATION_BEARER,
-        'Content-Type' => 'application/json'
+        'Content-Type: application/json',
+        'Connection: keep-alive',
+        'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     ];
 
+    // URL para la solicitud del token de 24 horas
     $url = "https://idserver.dof6.com/{$id_user}/devices/webplayer/cdn/token/refresh";
     $data = json_encode(['clave1' => 'valor1', 'clave2' => 'valor2']);  // Ajustar con datos reales
 
@@ -46,6 +49,9 @@ function obtener_token_24h($id_user, $AUTHORIZATION_BEARER) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);  // Asegurar HTTP/1.1
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);  // Deshabilitar verificación SSL para pruebas, habilitar en producción
 
     // Ejecutar la solicitud
     $response = curl_exec($ch);
