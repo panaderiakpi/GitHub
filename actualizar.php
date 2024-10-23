@@ -2,7 +2,7 @@
 // Configuración inicial
 $AUTHORIZATION_BEARER = file_get_contents('AUTHORIZATION_BEARER.ini');  // Leer Authorization Bearer
 $ARCHIVO_ORIGEN_O_URL = "Movistar_base.m3u";  // Archivo .m3u de origen
-$ARCHIVO_SALIDA = "btf.m3u";  // Archivo final
+$ARCHIVO_SALIDA = "gitbtf.m3u";  // Archivo final
 $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";  // API App key de Dropbox
 $APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // API App secret de Dropbox
 $REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // Refresh token de Dropbox
