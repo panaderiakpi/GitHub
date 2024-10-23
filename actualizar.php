@@ -2,7 +2,7 @@
 // Configuración inicial
 $AUTHORIZATION_BEARER = file_get_contents('AUTHORIZATION_BEARER.ini');  // Leer Authorization Bearer
 $ARCHIVO_ORIGEN_O_URL = "Movistar_base.m3u";  // Archivo .m3u de origen
-$ARCHIVO_SALIDA = "btf.m3u";  // Archivo final
+$ARCHIVO_SALIDA = "gitbtf.m3u";  // Archivo final
 $APP_KEY_DROPBOX = "dlp5gp2wnpwpemw";  // API App key de Dropbox
 $APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // API App secret de Dropbox
 $REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // Refresh token de Dropbox
@@ -174,8 +174,8 @@ function crear_enlace_dropbox($access_token, $dropbox_file_path) {
 $access_token = obtener_access_token_dropbox($REFRESH_TOKEN_DROPBOX, $APP_KEY_DROPBOX, $APP_SECRET_DROPBOX);
 
 // Subir archivo a Dropbox y obtener enlace de descarga
-if (subir_archivo_a_dropbox($ARCHIVO_SALIDA, $access_token, "/btf.m3u")) {
-    $url_publico = crear_enlace_dropbox($access_token, "/btf.m3u");
+if (subir_archivo_a_dropbox($ARCHIVO_SALIDA, $access_token, "/gitbtf.m3u")) {
+    $url_publico = crear_enlace_dropbox($access_token, "/gitbtf.m3u");
     echo "Enlace de descarga: {$url_publico}\nPROCESO FINALIZADO CON ÉXITO.";
 } else {
     echo "Error al subir el archivo a Dropbox.";
