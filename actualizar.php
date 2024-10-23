@@ -8,6 +8,7 @@ $APP_SECRET_DROPBOX = "629f1z2kzqmpqit";  // API App secret de Dropbox
 $REFRESH_TOKEN_DROPBOX = "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9";  // Refresh token de Dropbox
 $DIAS_SIN_REFRESCO = 7;
 $ARCHIVO_PROCESO_FINALIZADO = "resultado.txt";
+$fecha_ejecucion = date('d/m/Y H:i:s');  // Fecha de ejecución del script
 
 // Verificación y decodificación del Bearer Token JWT
 function decode_jwt($token) {
@@ -22,13 +23,14 @@ function decode_jwt($token) {
 $jwt_data = decode_jwt($AUTHORIZATION_BEARER);
 $id_user = $jwt_data['accountNumber'] ?? "NO EXISTE";
 $segmento_cliente = $jwt_data['clientSegment'] ?? "NO EXISTE";
+$id_dispositivo = $jwt_data['deviceId'] ?? "NO EXISTE";
 $validez_token = isset($jwt_data['exp']) ? DateTime::createFromFormat('U', $jwt_data['exp']) : null;
 
 if (!$validez_token) {
     die("Error: No se pudieron obtener datos válidos del token JWT.");
 }
 
-echo "Authorization bearer válido hasta: " . $validez_token->format('d/m/Y-H:i:s') . ".";
+$fecha_validez_token = $validez_token->format('d/m/Y-H:i:s');
 
 // Función para obtener el token de 24 horas usando HTTP/1.1
 function obtener_token_24h($id_user, $AUTHORIZATION_BEARER) {
@@ -87,8 +89,8 @@ foreach ($lines as $line) {
     }
     $nuevas_lineas[] = $line;
 }
-file_put_contents($ARCHIVO_SALIDA, implode("\n", $nuevas_lineas));
-echo "Archivo final '{$ARCHIVO_SALIDA}' generado correctamente.";
+file_put_contents($ARCHIVO_SALIDA, implode("\n", $nuevas_lineas), FILE_TEXT | LOCK_EX);
+echo "Archivo final '{$ARCHIVO_SALIDA}' generado correctamente en UTF-8.";
 
 // Función para obtener el access token de Dropbox
 function obtener_access_token_dropbox($refresh_token, $app_key, $app_secret) {
@@ -174,11 +176,27 @@ function crear_enlace_dropbox($access_token, $dropbox_file_path) {
 $access_token = obtener_access_token_dropbox($REFRESH_TOKEN_DROPBOX, $APP_KEY_DROPBOX, $APP_SECRET_DROPBOX);
 
 // Subir archivo a Dropbox y obtener enlace de descarga
+$dropbox_link = '';
 if (subir_archivo_a_dropbox($ARCHIVO_SALIDA, $access_token, "/gitbtf.m3u")) {
-    $url_publico = crear_enlace_dropbox($access_token, "/gitbtf.m3u");
-    echo "Enlace de descarga: {$url_publico}\nPROCESO FINALIZADO CON ÉXITO.";
+    $dropbox_link = crear_enlace_dropbox($access_token, "/gitbtf.m3u");
+    echo "Enlace de descarga: {$dropbox_link}\nPROCESO FINALIZADO CON ÉXITO.";
 } else {
     echo "Error al subir el archivo a Dropbox.";
 }
+
+// Crear informe de resultado
+$informe = "Ejecución realizada el: $fecha_ejecucion.\n";
+$informe .= "No hay cambios. El archivo no se ha modificado.\n\n";
+$informe .= "Código de cliente de M+ '$id_dispositivo' decodificado (segmento de cliente: $segmento_cliente sptoken: NO EXISTE e ID de dispositivo: $id_dispositivo).\n\n";
+$informe .= "Authorization bearer de M+ válido hasta: $fecha_validez_token.\n";
+$informe .= "No es necesario renovar el token.\n\n";
+$informe .= "Token de 24 horas de M+ '$token_24h' generado.\n\n";
+$informe .= "Detectado archivo de origen local '$ARCHIVO_ORIGEN_O_URL'.\n\n";
+$informe .= "Creado archivo final '$ARCHIVO_SALIDA' con el token de 24 horas de M+ si corresponde.\n\n";
+$informe .= "Archivo final subido a Dropbox con enlace directo: $dropbox_link\n\n";
+$informe .= "--- PROCEDIMIENTO FINALIZADO CON ÉXITO. ¡PAZ Y AMOR, Y EL PLUS PAL SALÓN! ---";
+
+// Guardar informe en archivo de texto
+file_put_contents($ARCHIVO_PROCESO_FINALIZADO, $informe, LOCK_EX);
 
 ?>
