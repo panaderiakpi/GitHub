@@ -1,7 +1,7 @@
 name: refresh token
 on:
   schedule:
-    - cron: '08 18 * * *' # Runs daily at 10:00 AM
+    - cron: '38 22 * * *' # Runs daily at 10:00 AM
   workflow_dispatch: # Allows manual run
 
 jobs:
