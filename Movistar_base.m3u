@@ -56,13 +56,6 @@ http://mplus-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstream.adaptive.license_key=77b7e5e8b6354bf8925af0ddd24afebd:635ed494d990466029b9681c7d981143
 http://vamos-dash-movistarplus.emisiondof6.com/manifest.mpd
 
-#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/CANSUR" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",Canal Sur
-#KODIPROP:inputstreamaddon=inputstream.adaptive
-#KODIPROP:inputstream.adaptive.manifest_type=mpd
-#KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=a1f2b5e88ce342f698cceef47c118e9b:3840185e2c4823137a5cdd246068439a
-http://tdtcsur-dash-movistarplus.emisiondof6.com/manifest.mpd
-
 #EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MV1" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ Cine
 #KODIPROP:inputstreamaddon=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
@@ -84,7 +77,7 @@ http://m1series-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstream.adaptive.license_key=13075cef94e24ca29b4ef5614a1a1192:93488c3497a7c68486187db56efaba49
 http://moriginales-dash-movistarplus.emisiondof6.com/manifest.mpd
 
-#EXTINF:-1 tvg-logo="https://www.movistarplus.es/recorte/m-NEO/canal/MBBC.png" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ BBC Earth
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBBC" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ BBC Earth
 #KODIPROP:inputstreamaddon=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
@@ -98,7 +91,7 @@ http://1popup-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstream.adaptive.license_key=a0e8ad05747040ca9887479536898d0a:f0bce7c3a14428b9e2364612e3822a6e
 http://mdocumentales-dash-movistarplus.emisiondof6.com/manifest.mpd
 
-#EXTINF:-1 tvg-logo="https://www.movistarplus.es/recorte/m-NEO/canal/MANIME.png" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ Anime
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MANIME" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ Anime
 #KODIPROP:inputstreamaddon=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
@@ -321,6 +314,13 @@ http://neox-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
 #KODIPROP:inputstream.adaptive.license_key=14baf540c86b48e4954459ba0e76dea7:2bb673f117ec9f14837b26bbe61aace6
 http://a3series-dash-movistarplus.emisiondof6.com/manifest.mpd
+
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MCOPA" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ Copa del Rey
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=37ff0f9bde3045c8a3a421cac241ff49:4d3bfff8d009a77ce9ef3a9302baa064
+http://01coparey-dash-movistarplus.emisiondof6.com/manifest.mpd
 
 #EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MLIGA" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ LALIGA TV
 #KODIPROP:inputstreamaddon=inputstream.adaptive
@@ -861,6 +861,13 @@ http://inttelemadrid-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstream.adaptive.license_key=f0efb2353a724567b20c9cf99d8960d0:da8df9698f81cf4972b40115ea8f3716
 http://3liga-dash-movistarplus.emisiondof6.com/manifest.mpd
 
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MLIG3" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",M+ LALIGA TV 4
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=4d4ed9f45b1640968a9569d48cb68d64:04d99b897cc16983950a5f4b0c72d698
+http://4liga-dash-movistarplus.emisiondof6.com/manifest.mpd
+
 #EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS2" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",Movistar Plus+ 2
 #KODIPROP:inputstreamaddon=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
@@ -1127,13 +1134,6 @@ http://test21-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstream.adaptive.license_key=
 https://test22-dash-movistarplus.emisiondof6.com/manifest.mpd
 
-#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/PRUE8" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",Pruebas 8
-#KODIPROP:inputstreamaddon=inputstream.adaptive
-#KODIPROP:inputstream.adaptive.manifest_type=mpd
-#KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=
-http://01pruebasim-dash-movistarplus.emisiondof6.com/manifest.mpd
-
 #EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/TV3CAT" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",TV3
 #KODIPROP:inputstreamaddon=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
@@ -1183,6 +1183,13 @@ http://tdt3ibiza-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstream.adaptive.license_key=c8dc875097e04040905419976707ec3e:03dea7dcfc0fdac68844e24b554a999a
 http://tdttvaragon-dash-movistarplus.emisiondof6.com/manifest.mpd
 
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/CANSUR" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",Canal Sur
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=a1f2b5e88ce342f698cceef47c118e9b:3840185e2c4823137a5cdd246068439a
+http://tdtcsur-dash-movistarplus.emisiondof6.com/manifest.mpd
+
 #EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/CANAR" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",TV Canaria
 #KODIPROP:inputstreamaddon=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
@@ -1204,9 +1211,58 @@ http://tdtcastmancha-dash-movistarplus.emisiondof6.com/manifest.mpd
 #KODIPROP:inputstream.adaptive.license_key=c9279b98dba74f1bad984be2ba4c7188:a7882af76fa4b9030b06b7df0c28a42e
 http://tdtcastleon-dash-movistarplus.emisiondof6.com/manifest.mpd
 
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/EXTRE" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",Canal Extremadura
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=37dc1fad133b4724be2a2a643b079249:1f917ad6924a7d5bf62ab72d7052b47f
+http://tdtextremad-dash-movistarplus.emisiondof6.com/manifest.mpd
+
 #EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/APUNT" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",À Punt
 #KODIPROP:inputstreamaddon=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
 #KODIPROP:inputstream.adaptive.license_key=3da699dd90ca4ed5b592dc1a294812ad:bb436703dea1abe660c00967657a35d3
 http://tdtapuntvalencia-dash-movistarplus.emisiondof6.com/manifest.mpd
+
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/7TVMUR" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",7 TV Región Murcia
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=
+http://tdtmurcia-dash-movistarplus.emisiondof6.com/manifest.mpd
+
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/PRUE8" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",Pruebas 8
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=
+http://01pruebasim-dash-movistarplus.emisiondof6.com/manifest.mpd
+
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/PRUE23" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",Pruebas 23
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=
+http://02pruebasim-dash-movistarplus.emisiondof6.com/manifest.mpd
+
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/PRUE24" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",Pruebas 24
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=
+http://03pruebasim-dash-movistarplus.emisiondof6.com/manifest.mpd
+
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/PRUE25" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",Pruebas 25
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=
+http://04pruebasim-dash-movistarplus.emisiondof6.com/manifest.mpd
+
+#EXTINF:-1 tvg-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/PRUE26" group-logo="https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MPLUS" group-title="MOVISTAR +",Pruebas 26
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=
+http://05pruebasim-dash-movistarplus.emisiondof6.com/manifest.mpd
