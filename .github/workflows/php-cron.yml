@@ -47,7 +47,7 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add gifBtf.m3u resultado.txt
+          git add gitbtf.m3u resultado.txt
           git commit -m "Actualizar archivos resultado.txt y gitBtf.m3u [ci skip]" || echo "No hay cambios para commitear"
           git push origin HEAD
         env:
@@ -61,7 +61,7 @@ jobs:
             --header "Authorization: Bearer ${{ secrets.DROPBOX_ACCESS_TOKEN }}" \
             --header "Dropbox-API-Arg: {\"path\": \"/gitRikelme.m3u\", \"mode\": \"overwrite\"}" \
             --header "Content-Type: application/octet-stream" \
-            --data-binary @gitRikelme.m3u
+            --data-binary @gitbtf.m3u
           curl -X POST "https://content.dropboxapi.com/2/files/upload" \
             --header "Authorization: Bearer ${{ secrets.DROPBOX_ACCESS_TOKEN }}" \
             --header "Dropbox-API-Arg: {\"path\": \"/resultado.txt\", \"mode\": \"overwrite\"}" \
