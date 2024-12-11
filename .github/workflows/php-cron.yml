@@ -47,8 +47,8 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add gitRikelme.m3u resultado.txt
-          git commit -m "Actualizar archivos resultado.txt y gitRikelme.m3u [ci skip]" || echo "No hay cambios para commitear"
+          git add gifBtf.m3u resultado.txt
+          git commit -m "Actualizar archivos resultado.txt y gitBtf.m3u [ci skip]" || echo "No hay cambios para commitear"
           git push origin HEAD
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
