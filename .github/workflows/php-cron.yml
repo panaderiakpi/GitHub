@@ -1,16 +1,77 @@
-name: refresh token
+name: Refresh Token and Notify Telegram
+
 on:
   schedule:
-    - cron: '38 22 * * *' # Runs daily at 10:00 AM
-  workflow_dispatch: # Allows manual run
+    - cron: '00 7 * * *' # Ejecutar todos los días a las 7:00 AM UTC
+  workflow_dispatch: # Permitir ejecución manual
 
 jobs:
-  upload-m3u:
-    runs-on: ubuntu-latest
+  upload-and-update:
+    runs-on: ubuntu-22.04
 
     steps:
+      # Paso 1: Descargar el repositorio
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Run PHP script to upload M3U to Dropbox
-        run: php actualizar.php
+      # Paso 2: Configurar PHP
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1' # Versión PHP compatible
+
+      # Paso 3: Ejecutar el script PHP
+      - name: Run PHP script
+        id: run_script
+        run: |
+          php actualizar.php > output.log
+          if [ $? -ne 0 ]; then
+            echo "Script failed" >> output.log
+          fi
+
+      # Paso 4: Leer el contenido de resultado.txt
+      - name: Read Result Log
+        id: read_result
+        run: |
+          if [ -f "resultado.txt" ]; then
+            cat resultado.txt
+            RESULT=$(cat resultado.txt | tr -d '\n')
+          else
+            RESULT="⚠️ No se encontró el archivo resultado.txt."
+          fi
+          echo "result=$RESULT" >> $GITHUB_ENV
+
+      # Paso 5: Subir los archivos al repositorio de GitHub
+      - name: Commit and push changes to GitHub
+        if: success()  # Solo si el script fue exitoso
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add gitRikelme.m3u resultado.txt
+          git commit -m "Actualizar archivos resultado.txt y gitRikelme.m3u [ci skip]" || echo "No hay cambios para commitear"
+          git push origin HEAD
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Paso 6: Subir los archivos a Dropbox
+      - name: Upload to Dropbox
+        if: success()  # Solo si el script fue exitoso
+        run: |
+          curl -X POST "https://content.dropboxapi.com/2/files/upload" \
+            --header "Authorization: Bearer ${{ secrets.DROPBOX_ACCESS_TOKEN }}" \
+            --header "Dropbox-API-Arg: {\"path\": \"/gitRikelme.m3u\", \"mode\": \"overwrite\"}" \
+            --header "Content-Type: application/octet-stream" \
+            --data-binary @gitRikelme.m3u
+          curl -X POST "https://content.dropboxapi.com/2/files/upload" \
+            --header "Authorization: Bearer ${{ secrets.DROPBOX_ACCESS_TOKEN }}" \
+            --header "Dropbox-API-Arg: {\"path\": \"/resultado.txt\", \"mode\": \"overwrite\"}" \
+            --header "Content-Type: application/octet-stream" \
+            --data-binary @resultado.txt
+
+      # Paso 7: Notificar por Telegram en caso de éxito
+      - name: Notify via Telegram
+        if: success()
+        run: |
+          curl --http1.1 -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d "text=✅ Archivos actualizados correctamente en GitHub y Dropbox."
