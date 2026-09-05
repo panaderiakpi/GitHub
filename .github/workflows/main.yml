@@ -99,7 +99,8 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add . 
-          git diff --cached --exit-code || git commit -m "Actualizar archivos generados por RefreshPapa.py"
+          git diff --cached --exit-code || git commit -m "Actualizar archivos generados por RefreshGif.py"
+          git pull --rebase origin main  # <-- ESTA ES LA ÚNICA LÍNEA NUEVA
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
