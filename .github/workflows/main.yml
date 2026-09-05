@@ -10,7 +10,7 @@ jobs:
     steps:
       # Paso 1: Descargar el repositorio
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Paso 2: Instalar dependencias del sistema y de Python
       - name: Install dependencies (Python & OpenVPN)
