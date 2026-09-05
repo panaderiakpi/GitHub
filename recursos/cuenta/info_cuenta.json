@@ -1,0 +1,21 @@
+{
+  "cod_usuario": "16167863",
+  "cod_usuario_cifrado": "7U7k818I8U8c8u94",
+  "login": "btfteam1@gmail.com",
+  "email": "btfteam1@gmail.com",
+  "tipo": "TITULAR",
+  "ofertas": [
+    {
+      "@plataforma": "NODTH",
+      "@ind_principal": "S",
+      "@id_perfil": "LITE",
+      "@ind_autorizado": "S",
+      "cod_persona": "00QSp0000018JPyMAM",
+      "cod_oferta": "L",
+      "descriptor": "MOVISTAR+",
+      "user_uid": "",
+      "origen": "YOMVI",
+      "accountNumber": "00QSp0000018JPyMAM-L"
+    }
+  ]
+}
