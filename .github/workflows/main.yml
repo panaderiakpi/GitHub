@@ -2,6 +2,9 @@ name: Ejecutar SCRIPT
 
 on:
   workflow_dispatch: # Permite ejecución manual
+  schedule:
+    # Se ejecuta todos los días a las 09:30 y 21:30 UTC (11:30 y 23:30 hora peninsular de España en verano)
+    - cron: '30 9,21 * * *'
 
 jobs:
   upload-m3u:
