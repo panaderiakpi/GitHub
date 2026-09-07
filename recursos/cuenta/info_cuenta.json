@@ -1,0 +1,21 @@
+{
+  "cod_usuario": "22995787",
+  "cod_usuario_cifrado": "7Y7m808G8X8k8q9A",
+  "login": "lourdes.gil@3i-g.com",
+  "email": "lourdes.gil@3i-g.com",
+  "tipo": "TITULAR",
+  "ofertas": [
+    {
+      "@plataforma": "MOVIST",
+      "@ind_principal": "S",
+      "@id_perfil": "OTT",
+      "@ind_autorizado": "S",
+      "cod_persona": "28110001025557",
+      "cod_oferta": "TEF",
+      "descriptor": "MOVISTAR+",
+      "user_uid": "1a1a4e9b-3255-4064-acf0-0e19c5e3a267",
+      "origen": "YOMVI",
+      "accountNumber": "28110001025557-TEF"
+    }
+  ]
+}
