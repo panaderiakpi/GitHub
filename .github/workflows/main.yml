@@ -1,9 +1,7 @@
 name: Ejecutar SCRIPT
 
 on:
-  schedule:
-    - cron: '15 1,7 * * *' # Ejecutar todos los días a las 7:00 AM UTC
-  workflow_dispatch: # Permitir ejecución manual
+   workflow_dispatch: # Permitir ejecución manual
 
 jobs:
   upload-m3u:
