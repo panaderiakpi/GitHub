@@ -91,9 +91,9 @@
     },
     "dropbox": {
         "activo": true,
-        "app_key": "85av7lv8zcf77cx",
-        "app_secret": "kuqnh1f0tgylyrl",
-        "refresh_token": "D35cQ6SgSqoAAAAAAAAAATB3mqOtkc-_JoV2xj51ONNUjLHN64nPJ6Ox-lJGrkUr",
+        "app_key": "dlp5gp2wnpwpemw",
+        "app_secret": "629f1z2kzqmpqit",
+        "refresh_token": "2ZaA-C17U9cAAAAAAAAAATT4xMMzRLPty-8HNohgKI83BO7fYperM0Nn2HkHuPg9",
         "file_name": "Movistar_Git.m3u"
     },
     "opciones": {
