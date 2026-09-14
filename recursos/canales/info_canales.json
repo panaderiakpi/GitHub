@@ -88,11 +88,11 @@
         "mpd": "http://moriginales-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
-        "nombre": "M+ Vacaciones",
-        "codigo_cadena": "MVCIVA",
-        "dial": 15,
+        "nombre": "M+ Terror",
+        "codigo_cadena": "TERROR",
+        "dial": null,
         "casId": "4955",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MVCIVA",
+        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/TERROR",
         "mpd": "http://1popup-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
@@ -104,11 +104,11 @@
         "mpd": "http://mdocumentales-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
-        "nombre": "M+ Orgullo",
-        "codigo_cadena": "MORGUL",
-        "dial": 18,
+        "nombre": "M+ Romance",
+        "codigo_cadena": "MROMA",
+        "dial": null,
         "casId": "5252",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MORGUL",
+        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MROMA",
         "mpd": "http://02popup-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
