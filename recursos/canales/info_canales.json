@@ -90,7 +90,7 @@
     {
         "nombre": "M+ Terror",
         "codigo_cadena": "TERROR",
-        "dial": null,
+        "dial": 15,
         "casId": "4955",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/TERROR",
         "mpd": "http://1popup-dash-movistarplus.emisiondof6.com/manifest.mpd"
@@ -106,7 +106,7 @@
     {
         "nombre": "M+ Romance",
         "codigo_cadena": "MROMA",
-        "dial": null,
+        "dial": 18,
         "casId": "5252",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MROMA",
         "mpd": "http://02popup-dash-movistarplus.emisiondof6.com/manifest.mpd"
@@ -1120,22 +1120,6 @@
         "mpd": "http://3mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
-        "nombre": "M+ Deportes 7",
-        "codigo_cadena": "MULTI6",
-        "dial": 195,
-        "casId": "4569",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MULTI6",
-        "mpd": "http://7multidep-dash-movistarplus.emisiondof6.com/manifest.mpd"
-    },
-    {
-        "nombre": "M+ Deportes 8",
-        "codigo_cadena": "MULTI9",
-        "dial": 196,
-        "casId": "4769",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MULTI9",
-        "mpd": "http://8multidep-dash-movistarplus.emisiondof6.com/manifest.mpd"
-    },
-    {
         "nombre": "DAZN 3",
         "codigo_cadena": "DAZN3",
         "dial": 197,
@@ -1182,22 +1166,6 @@
         "casId": "4896",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/SKAM",
         "mpd": "http://skam-dash-movistarplus.emisiondof6.com/manifest.mpd"
-    },
-    {
-        "nombre": "M+ LALIGA HDR",
-        "codigo_cadena": "MLIGUH",
-        "dial": 440,
-        "casId": "5077",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MLIGUH",
-        "mpd": "http://uhdlaliga-dash-movistarplus.emisiondof6.com/manifestuhd.mpd"
-    },
-    {
-        "nombre": "M+ LALIGA 2 HDR",
-        "codigo_cadena": "MLIUHD",
-        "dial": 441,
-        "casId": "5474",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MLIUHD",
-        "mpd": "http://hdr2liga-dash-movistarplus.emisiondof6.com/manifestuhd.mpd"
     },
     {
         "nombre": "TV3",
