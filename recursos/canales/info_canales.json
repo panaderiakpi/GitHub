@@ -992,14 +992,6 @@
         "mpd": "http://4liga-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
-        "nombre": "TVG 2",
-        "codigo_cadena": "TVG2",
-        "dial": 10,
-        "casId": "5567",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/TVG2",
-        "mpd": "http://canalesabr-dash-movistarplus.emisiondof6.com/manifest.mpd"
-    },
-    {
         "nombre": "CGTN Documentary",
         "codigo_cadena": "CGTND",
         "dial": 142,
@@ -1605,6 +1597,14 @@
         "dial": 10,
         "casId": "5597",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/CAN33",
+        "mpd": "http://canalesabr-dash-movistarplus.emisiondof6.com/manifest.mpd"
+    },
+    {
+        "nombre": "TVG 2",
+        "codigo_cadena": "TVG2",
+        "dial": 10,
+        "casId": "5567",
+        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/TVG2",
         "mpd": "http://canalesabr-dash-movistarplus.emisiondof6.com/manifest.mpd"
     }
 ]
