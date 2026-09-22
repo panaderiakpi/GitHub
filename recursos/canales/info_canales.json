@@ -992,6 +992,22 @@
         "mpd": "http://4liga-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
+        "nombre": "M+ Baloncesto 4",
+        "codigo_cadena": "MBALC4",
+        "dial": null,
+        "casId": "5612",
+        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBALC4",
+        "mpd": "http://4mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
+    },
+    {
+        "nombre": "M+ Baloncesto 5",
+        "codigo_cadena": "MBALC5",
+        "dial": null,
+        "casId": "5615",
+        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBALC5",
+        "mpd": "http://5mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
+    },
+    {
         "nombre": "CGTN Documentary",
         "codigo_cadena": "CGTND",
         "dial": 142,
@@ -1134,22 +1150,6 @@
         "casId": "5137",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MLIGS3",
         "mpd": "http://3segdiv-dash-movistarplus.emisiondof6.com/manifest.mpd"
-    },
-    {
-        "nombre": "M+ Baloncesto 4",
-        "codigo_cadena": "MBALC4",
-        "dial": null,
-        "casId": "5612",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBALC4",
-        "mpd": "http://4mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
-    },
-    {
-        "nombre": "M+ Baloncesto 5",
-        "codigo_cadena": "MBALC5",
-        "dial": null,
-        "casId": "5615",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBALC5",
-        "mpd": "http://5mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
         "nombre": "SKAM",
