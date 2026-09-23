@@ -973,7 +973,7 @@
         "dial": 159,
         "casId": "4557",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/ETB",
-        "mpd": "http://etb-dash-movistarplus.emisiondof6.com/manifest.mpd"
+        "mpd": "http://etb2onsat-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
         "nombre": "M+ LALIGA 3",
@@ -994,7 +994,7 @@
     {
         "nombre": "M+ Baloncesto 4",
         "codigo_cadena": "MBALC4",
-        "dial": null,
+        "dial": 195,
         "casId": "5612",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBALC4",
         "mpd": "http://4mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
@@ -1002,7 +1002,7 @@
     {
         "nombre": "M+ Baloncesto 5",
         "codigo_cadena": "MBALC5",
-        "dial": null,
+        "dial": 196,
         "casId": "5615",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBALC5",
         "mpd": "http://5mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
