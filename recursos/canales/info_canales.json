@@ -992,28 +992,20 @@
         "mpd": "http://4liga-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
-        "nombre": "M+ Baloncesto 4",
-        "codigo_cadena": "MBALC4",
-        "dial": 195,
-        "casId": "5612",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBALC4",
-        "mpd": "http://4mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
-    },
-    {
-        "nombre": "M+ Baloncesto 5",
-        "codigo_cadena": "MBALC5",
-        "dial": 196,
-        "casId": "5615",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBALC5",
-        "mpd": "http://5mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
-    },
-    {
         "nombre": "CGTN Documentary",
         "codigo_cadena": "CGTND",
         "dial": 142,
         "casId": "5352",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/CGTND",
         "mpd": "http://canalesabr-dash-movistarplus.emisiondof6.com/manifest.mpd"
+    },
+    {
+        "nombre": "LALIGA TV HYPERMOTION 3",
+        "codigo_cadena": "MLIGS3",
+        "dial": 178,
+        "casId": "5137",
+        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MLIGS3",
+        "mpd": "http://3segdiv-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
         "nombre": "M+ Liga de Campeones  4",
@@ -1128,6 +1120,22 @@
         "mpd": "http://3mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
+        "nombre": "M+ Baloncesto 4",
+        "codigo_cadena": "MBALC4",
+        "dial": 195,
+        "casId": "5612",
+        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBALC4",
+        "mpd": "http://4mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
+    },
+    {
+        "nombre": "M+ Baloncesto 5",
+        "codigo_cadena": "MBALC5",
+        "dial": 196,
+        "casId": "5615",
+        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MBALC5",
+        "mpd": "http://5mbasket-dash-movistarplus.emisiondof6.com/manifest.mpd"
+    },
+    {
         "nombre": "DAZN 3",
         "codigo_cadena": "DAZN3",
         "dial": 197,
@@ -1142,14 +1150,6 @@
         "casId": "4962",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/DAZN4",
         "mpd": "http://dazn4-dash-movistarplus.emisiondof6.com/manifest.mpd"
-    },
-    {
-        "nombre": "LALIGA TV HYPERMOTION 3",
-        "codigo_cadena": "MLIGS3",
-        "dial": 178,
-        "casId": "5137",
-        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/MLIGS3",
-        "mpd": "http://3segdiv-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
         "nombre": "SKAM",
