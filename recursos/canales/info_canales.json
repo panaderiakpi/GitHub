@@ -1606,5 +1606,13 @@
         "casId": "5356",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/7TVMUR",
         "mpd": "http://tdtmurcia-dash-movistarplus.emisiondof6.com/manifest.mpd"
+    },
+    {
+        "nombre": "M+ Cero 2",
+        "codigo_cadena": "CERO2",
+        "dial": null,
+        "casId": "5618",
+        "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/CERO2",
+        "mpd": "http://02origfreemium-dash-movistarplus.emisiondof6.com/manifest.mpd"
     }
 ]
