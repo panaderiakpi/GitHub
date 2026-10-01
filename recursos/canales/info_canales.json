@@ -1170,7 +1170,7 @@
     {
         "nombre": "M+ Cero 2",
         "codigo_cadena": "CERO2",
-        "dial": null,
+        "dial": 130,
         "casId": "5618",
         "logo": "https://estatico.emisiondof6.com/recorte/m-DP/wpmos/CERO2",
         "mpd": "http://02origfreemium-dash-movistarplus.emisiondof6.com/manifest.mpd"
