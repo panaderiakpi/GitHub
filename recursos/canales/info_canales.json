@@ -288,7 +288,7 @@
         "mpd": "http://cosmo-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
-        "nombre": "SYFY",
+        "nombre": "SciFi",
         "codigo_cadena": "SCI-FI",
         "dial": 43,
         "casId": "4536",
@@ -568,7 +568,7 @@
         "mpd": "http://eurosport2-dash-movistarplus.emisiondof6.com/manifest.mpd"
     },
     {
-        "nombre": "GOL",
+        "nombre": "Replay",
         "codigo_cadena": "GOL",
         "dial": 79,
         "casId": "4577",
